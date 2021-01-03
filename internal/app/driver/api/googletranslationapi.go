@@ -15,7 +15,9 @@ func NewGoogleTranslationAPI() *GoogleTranslationAPI {
 type LanguageType string
 
 const (
+	// JP language type
 	JP LanguageType = "JP"
+	// EN language type
 	EN LanguageType = "EN"
 )
 
@@ -27,17 +29,17 @@ type GoogleTranslationAPIRequestBody struct {
 
 // GoogleTranslationAPIResponseBody is a response of Translate method.
 type GoogleTranslationAPIResponseBody struct {
-	Text string
-	Lang LanguageType
+	Text           string
+	Lang           LanguageType
 	TranslatedText string
 }
 
 // Translate returns translated text with Google Translate API.
-func (a GoogleTranslationAPI)Translate(ctx context.Context, body GoogleTranslationAPIRequestBody ) (resp GoogleTranslationAPIResponseBody, err error){
+func (a GoogleTranslationAPI) Translate(ctx context.Context, body GoogleTranslationAPIRequestBody) (resp GoogleTranslationAPIResponseBody, err error) {
 	// TODO: channel
 	resp = GoogleTranslationAPIResponseBody{
-		Text: body.Text,
-		Lang: body.Lang,
+		Text:           body.Text,
+		Lang:           body.Lang,
 		TranslatedText: "hoge",
 	}
 	return

@@ -1,12 +1,12 @@
 package util_test
 
 import (
+	"api/internal/pkg/util"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"slacktimer/internal/pkg/util"
 	"strings"
 	"time"
 )

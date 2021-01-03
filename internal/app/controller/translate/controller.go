@@ -1,18 +1,20 @@
 package translate
 
 import (
-	"net/http"
-	"encoding/json"
 	"api/internal/app/driver/api"
-	"context"
 	"api/internal/pkg/util"
+	"context"
+	"encoding/json"
+	"net/http"
 )
 
-// Language type
+// LanguageType is a type of Language
 type LanguageType string
 
 const (
+	// JP language type
 	JP LanguageType = "JP"
+	// EN language type
 	EN LanguageType = "EN"
 )
 
@@ -38,10 +40,10 @@ func (r RequestBody) googleTranslationAPIRequestLang() api.LanguageType {
 }
 
 // ResponseBody is a response of controller action.
-type ResponseBody  struct {
-	Text string `json:"text"`
-	Lang LanguageType `json:"lang"`
-	TranslatedText string `json:"translatedtext"`
+type ResponseBody struct {
+	Text           string       `json:"text"`
+	Lang           LanguageType `json:"lang"`
+	TranslatedText string       `json:"translatedtext"`
 }
 
 // Controller handles translate API.
@@ -54,7 +56,7 @@ func NewController() *Controller {
 }
 
 // Handle processes translate API.
-func (c *Controller)Handle(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Handle(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -67,15 +69,15 @@ func (c *Controller)Handle(ctx context.Context, w http.ResponseWriter, r *http.R
 	}
 	api := api.NewGoogleTranslationAPI()
 
-	apiResp, err := api.Translate(ctx, apiReqBody);
+	apiResp, err := api.Translate(ctx, apiReqBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	resp := ResponseBody{
-		Text: body.Text,
-		Lang: body.Lang,
+		Text:           body.Text,
+		Lang:           body.Lang,
 		TranslatedText: apiResp.TranslatedText,
 	}
 	respBody, err := json.Marshal(resp)
