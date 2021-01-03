@@ -7,12 +7,11 @@
 package translator
 
 import (
-	reflect "reflect"
-	sync "sync"
-
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	sync "sync"
 )
 
 const (
@@ -26,50 +25,96 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type LangType int32
+type TranslateRequest_LangType int32
 
 const (
-	LangType_JP LangType = 0
-	LangType_EN LangType = 1
+	TranslateRequest_JP TranslateRequest_LangType = 0
+	TranslateRequest_EN TranslateRequest_LangType = 1
 )
 
-// Enum value maps for LangType.
+// Enum value maps for TranslateRequest_LangType.
 var (
-	LangType_name = map[int32]string{
+	TranslateRequest_LangType_name = map[int32]string{
 		0: "JP",
 		1: "EN",
 	}
-	LangType_value = map[string]int32{
+	TranslateRequest_LangType_value = map[string]int32{
 		"JP": 0,
 		"EN": 1,
 	}
 )
 
-func (x LangType) Enum() *LangType {
-	p := new(LangType)
+func (x TranslateRequest_LangType) Enum() *TranslateRequest_LangType {
+	p := new(TranslateRequest_LangType)
 	*p = x
 	return p
 }
 
-func (x LangType) String() string {
+func (x TranslateRequest_LangType) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (LangType) Descriptor() protoreflect.EnumDescriptor {
+func (TranslateRequest_LangType) Descriptor() protoreflect.EnumDescriptor {
 	return file_translator_proto_enumTypes[0].Descriptor()
 }
 
-func (LangType) Type() protoreflect.EnumType {
+func (TranslateRequest_LangType) Type() protoreflect.EnumType {
 	return &file_translator_proto_enumTypes[0]
 }
 
-func (x LangType) Number() protoreflect.EnumNumber {
+func (x TranslateRequest_LangType) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use LangType.Descriptor instead.
-func (LangType) EnumDescriptor() ([]byte, []int) {
-	return file_translator_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use TranslateRequest_LangType.Descriptor instead.
+func (TranslateRequest_LangType) EnumDescriptor() ([]byte, []int) {
+	return file_translator_proto_rawDescGZIP(), []int{0, 0}
+}
+
+type TranslateResponse_LangType int32
+
+const (
+	TranslateResponse_JP TranslateResponse_LangType = 0
+	TranslateResponse_EN TranslateResponse_LangType = 1
+)
+
+// Enum value maps for TranslateResponse_LangType.
+var (
+	TranslateResponse_LangType_name = map[int32]string{
+		0: "JP",
+		1: "EN",
+	}
+	TranslateResponse_LangType_value = map[string]int32{
+		"JP": 0,
+		"EN": 1,
+	}
+)
+
+func (x TranslateResponse_LangType) Enum() *TranslateResponse_LangType {
+	p := new(TranslateResponse_LangType)
+	*p = x
+	return p
+}
+
+func (x TranslateResponse_LangType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TranslateResponse_LangType) Descriptor() protoreflect.EnumDescriptor {
+	return file_translator_proto_enumTypes[1].Descriptor()
+}
+
+func (TranslateResponse_LangType) Type() protoreflect.EnumType {
+	return &file_translator_proto_enumTypes[1]
+}
+
+func (x TranslateResponse_LangType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TranslateResponse_LangType.Descriptor instead.
+func (TranslateResponse_LangType) EnumDescriptor() ([]byte, []int) {
+	return file_translator_proto_rawDescGZIP(), []int{1, 0}
 }
 
 // The request message containing the user's name.
@@ -78,8 +123,8 @@ type TranslateRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Text string   `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
-	Lang LangType `protobuf:"varint,2,opt,name=lang,proto3,enum=translator.LangType" json:"lang,omitempty"`
+	Text string                    `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	Lang TranslateRequest_LangType `protobuf:"varint,2,opt,name=lang,proto3,enum=translator.TranslateRequest_LangType" json:"lang,omitempty"`
 }
 
 func (x *TranslateRequest) Reset() {
@@ -121,11 +166,11 @@ func (x *TranslateRequest) GetText() string {
 	return ""
 }
 
-func (x *TranslateRequest) GetLang() LangType {
+func (x *TranslateRequest) GetLang() TranslateRequest_LangType {
 	if x != nil {
 		return x.Lang
 	}
-	return LangType_JP
+	return TranslateRequest_JP
 }
 
 // The response message containing the greetings
@@ -134,9 +179,9 @@ type TranslateResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Text           string   `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
-	Lang           LangType `protobuf:"varint,2,opt,name=lang,proto3,enum=translator.LangType" json:"lang,omitempty"`
-	TranslatedText string   `protobuf:"bytes,3,opt,name=translatedText,proto3" json:"translatedText,omitempty"`
+	Text           string                     `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	Lang           TranslateResponse_LangType `protobuf:"varint,2,opt,name=lang,proto3,enum=translator.TranslateResponse_LangType" json:"lang,omitempty"`
+	TranslatedText string                     `protobuf:"bytes,3,opt,name=translatedText,proto3" json:"translatedText,omitempty"`
 }
 
 func (x *TranslateResponse) Reset() {
@@ -178,11 +223,11 @@ func (x *TranslateResponse) GetText() string {
 	return ""
 }
 
-func (x *TranslateResponse) GetLang() LangType {
+func (x *TranslateResponse) GetLang() TranslateResponse_LangType {
 	if x != nil {
 		return x.Lang
 	}
-	return LangType_JP
+	return TranslateResponse_JP
 }
 
 func (x *TranslateResponse) GetTranslatedText() string {
@@ -196,20 +241,24 @@ var File_translator_proto protoreflect.FileDescriptor
 
 var file_translator_proto_rawDesc = []byte{
 	0x0a, 0x10, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x12, 0x0a, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x50,
+	0x74, 0x6f, 0x12, 0x0a, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x7d,
 	0x0a, 0x10, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x12, 0x28, 0x0a, 0x04, 0x6c, 0x61, 0x6e, 0x67, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0e, 0x32, 0x14, 0x2e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x6f,
-	0x72, 0x2e, 0x4c, 0x61, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x6c, 0x61, 0x6e, 0x67,
-	0x22, 0x79, 0x0a, 0x11, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x12, 0x28, 0x0a, 0x04, 0x6c, 0x61, 0x6e,
-	0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x14, 0x2e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x6c,
-	0x61, 0x74, 0x6f, 0x72, 0x2e, 0x4c, 0x61, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x6c,
+	0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x12, 0x39, 0x0a, 0x04, 0x6c, 0x61, 0x6e, 0x67, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0e, 0x32, 0x25, 0x2e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x6f,
+	0x72, 0x2e, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x2e, 0x4c, 0x61, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x6c, 0x61, 0x6e,
+	0x67, 0x22, 0x1a, 0x0a, 0x08, 0x4c, 0x61, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x12, 0x06, 0x0a,
+	0x02, 0x4a, 0x50, 0x10, 0x00, 0x12, 0x06, 0x0a, 0x02, 0x45, 0x4e, 0x10, 0x01, 0x22, 0xa7, 0x01,
+	0x0a, 0x11, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x78, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x74, 0x65, 0x78, 0x74, 0x12, 0x3a, 0x0a, 0x04, 0x6c, 0x61, 0x6e, 0x67, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x26, 0x2e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74,
+	0x6f, 0x72, 0x2e, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x4c, 0x61, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x6c,
 	0x61, 0x6e, 0x67, 0x12, 0x26, 0x0a, 0x0e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61, 0x74, 0x65,
 	0x64, 0x54, 0x65, 0x78, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x74, 0x72, 0x61,
-	0x6e, 0x73, 0x6c, 0x61, 0x74, 0x65, 0x64, 0x54, 0x65, 0x78, 0x74, 0x2a, 0x1a, 0x0a, 0x08, 0x4c,
+	0x6e, 0x73, 0x6c, 0x61, 0x74, 0x65, 0x64, 0x54, 0x65, 0x78, 0x74, 0x22, 0x1a, 0x0a, 0x08, 0x4c,
 	0x61, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x12, 0x06, 0x0a, 0x02, 0x4a, 0x50, 0x10, 0x00, 0x12,
 	0x06, 0x0a, 0x02, 0x45, 0x4e, 0x10, 0x01, 0x32, 0x58, 0x0a, 0x0a, 0x54, 0x72, 0x61, 0x6e, 0x73,
 	0x6c, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x4a, 0x0a, 0x09, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x6c, 0x61,
@@ -234,18 +283,19 @@ func file_translator_proto_rawDescGZIP() []byte {
 	return file_translator_proto_rawDescData
 }
 
-var file_translator_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_translator_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_translator_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_translator_proto_goTypes = []interface{}{
-	(LangType)(0),             // 0: translator.LangType
-	(*TranslateRequest)(nil),  // 1: translator.TranslateRequest
-	(*TranslateResponse)(nil), // 2: translator.TranslateResponse
+	(TranslateRequest_LangType)(0),  // 0: translator.TranslateRequest.LangType
+	(TranslateResponse_LangType)(0), // 1: translator.TranslateResponse.LangType
+	(*TranslateRequest)(nil),        // 2: translator.TranslateRequest
+	(*TranslateResponse)(nil),       // 3: translator.TranslateResponse
 }
 var file_translator_proto_depIdxs = []int32{
-	0, // 0: translator.TranslateRequest.lang:type_name -> translator.LangType
-	0, // 1: translator.TranslateResponse.lang:type_name -> translator.LangType
-	1, // 2: translator.Translator.Translate:input_type -> translator.TranslateRequest
-	2, // 3: translator.Translator.Translate:output_type -> translator.TranslateResponse
+	0, // 0: translator.TranslateRequest.lang:type_name -> translator.TranslateRequest.LangType
+	1, // 1: translator.TranslateResponse.lang:type_name -> translator.TranslateResponse.LangType
+	2, // 2: translator.Translator.Translate:input_type -> translator.TranslateRequest
+	3, // 3: translator.Translator.Translate:output_type -> translator.TranslateResponse
 	3, // [3:4] is the sub-list for method output_type
 	2, // [2:3] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -289,7 +339,7 @@ func file_translator_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_translator_proto_rawDesc,
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,

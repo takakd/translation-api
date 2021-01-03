@@ -10,21 +10,26 @@ service Translator {
   rpc Translate (TranslateRequest) returns (TranslateResponse) {}
 }
 
-enum LangType {
-  JP = 0;
-  EN = 1;
-}
-
 // The request message containing the user's name.
 message TranslateRequest {
   string text = 1;
 
+	enum LangType {
+	  JP = 0;
+	  EN = 1;
+	}
   LangType lang = 2;
 }
 
 // The response message containing the greetings
 message TranslateResponse {
   string text = 1;
+
+	enum LangType {
+	  JP = 0;
+	  EN = 1;
+	}
   LangType lang = 2;
+
   string translatedText = 3;
 }
