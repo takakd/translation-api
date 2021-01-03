@@ -2,8 +2,8 @@ package translate
 
 import (
 	"api/internal/app/driver/api"
+	"api/internal/app/util/appcontext"
 	"api/internal/pkg/util"
-	"context"
 	"encoding/json"
 	"net/http"
 )
@@ -56,20 +56,19 @@ func NewController() *Controller {
 }
 
 // Handle processes translate API.
-func (c *Controller) Handle(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Handle(ctx appcontext.Context, w http.ResponseWriter, r *http.Request) {
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	googleApi := api.NewGoogleTranslationAPI()
 	apiReqBody := api.GoogleTranslationAPIRequestBody{
 		Text: body.Text,
 		Lang: body.googleTranslationAPIRequestLang(),
 	}
-	api := api.NewGoogleTranslationAPI()
-
-	apiResp, err := api.Translate(ctx, apiReqBody)
+	apiResp, err := googleApi.Translate(ctx, apiReqBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

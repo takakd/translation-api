@@ -1,6 +1,6 @@
 package api
 
-import "context"
+import "api/internal/app/util/appcontext"
 
 // GoogleTranslationAPI serves Google Translate API handlers used by the app.
 type GoogleTranslationAPI struct {
@@ -22,6 +22,7 @@ const (
 )
 
 // GoogleTranslationAPIRequestBody is a parameter of Translate method.
+// GoogleTranslationAPIRequestBody is a parameter of Translate method.
 type GoogleTranslationAPIRequestBody struct {
 	Text string
 	Lang LanguageType
@@ -35,7 +36,7 @@ type GoogleTranslationAPIResponseBody struct {
 }
 
 // Translate returns translated text with Google Translate API.
-func (a GoogleTranslationAPI) Translate(ctx context.Context, body GoogleTranslationAPIRequestBody) (resp GoogleTranslationAPIResponseBody, err error) {
+func (a GoogleTranslationAPI) Translate(ctx appcontext.Context, body GoogleTranslationAPIRequestBody) (resp GoogleTranslationAPIResponseBody, err error) {
 	// TODO: channel
 	resp = GoogleTranslationAPIResponseBody{
 		Text:           body.Text,
