@@ -11,11 +11,11 @@ type Context struct {
 }
 
 // NewContext creates new struct.
-func NewContext(ctx context.Context, requestID string) (Context, error) {
+func NewContext(ctx context.Context, requestID string) Context {
 	return Context{
 		ctx:       ctx,
 		requestID: requestID,
-	}, nil
+	}
 }
 
 // TODO returns empty context, which is only used in unit test.

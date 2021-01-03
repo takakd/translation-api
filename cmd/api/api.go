@@ -1,9 +1,8 @@
 package main
 
-import "api/internal/app/driver/webserver"
+import "api/internal/app/driver/grpcserver"
 
 func main() {
-	server := webserver.NewServer()
-	server.Init()
+	server := grpcserver.NewServer()
 	server.Run()
 }

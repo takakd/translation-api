@@ -25,6 +25,10 @@ fmt:
 	@echo "==> Formatting go sources..."
 	@sh -c "sh '$(CURDIR)/scripts/local.sh' fmt"
 
+grpc:
+	@echo "==> Generate gRPC codes..."
+	@sh -c "sh '$(CURDIR)/scripts/local.sh' grpc"
+
 # Arguments have priority
 #FOO=hoge
 #export FOO

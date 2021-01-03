@@ -81,6 +81,10 @@ cmd_test() {
     docker_cleanup
 }
 
+grpc() {
+    protoc --go-grpc_out=${SCRIPT_DIR}/../internal/app/grpc/translator --go-grpc_opt=paths=source_relative --proto_path=${SCRIPT_DIR}/../internal/app/grpc/translator --go_out=${SCRIPT_DIR}/../internal/app/grpc/translator --go_opt=paths=source_relative ${SCRIPT_DIR}/../internal/app/grpc/translator/translator.proto
+}
+
 install() {
     go env -w GO111MODULE=on
     go mod vendor -v
@@ -104,6 +108,8 @@ elif [[ $1 = "docker:run" ]]; then
     docker_run
 elif [[ $1 = "docker:stop" ]]; then
     docker_cleanup
+elif [[ $1 = "grpc" ]]; then
+    grpc
 else
     usage
 fi
