@@ -17,12 +17,13 @@ import (
 )
 
 const (
-	port = ":50051"
+	DefaultPort = "50051"
 )
 
 // Server is used to implement translator.TranslatorServer.
 type Server struct {
 	pb.UnimplementedTranslatorServer
+	port string
 }
 
 // NewServer creates new struct.
@@ -30,7 +31,7 @@ func NewServer() *Server {
 	return &Server{}
 }
 
-func (Server) Setup() {
+func (s *Server) Setup() {
 	ctx := appcontext.NewContext(context.Background(), "Server.Init")
 
 	if env := os.Getenv("DOT_ENV"); env != "" {
@@ -49,14 +50,22 @@ func (Server) Setup() {
 		level = log.LevelError
 	}
 	log.SetLevel(level)
+
+	var port string
+	if port = os.Getenv("GRPC_PORT"); port == "" {
+		port = DefaultPort
+	}
+	s.port = fmt.Sprintf(":%s", port)
 }
 
 // Run start web server.
-func (Server) Run() {
+func (s *Server) Run() {
 	ctx := appcontext.NewContext(context.Background(), "Server.Run")
 
+	fmt.Println(s.port)
+
 	// Create gRPC server.
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", s.port)
 	if err != nil {
 		log.Fatal(ctx, fmt.Sprintf("failed to listen: %v", err))
 	}

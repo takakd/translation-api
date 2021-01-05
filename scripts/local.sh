@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Helper scripts for Local
+# Helper scripts for Makefile
 #
 
 SCRIPT_DIR=$(cd $(dirname "$0"); pwd)
@@ -42,28 +42,24 @@ fmt() {
 }
 
 run() {
-#    docker_run
+    proxy_envoy_run
 
-#    # Call if it's entered Ctrl+C
-#    trap docker_cleanup SIGINT
+    # Call if it's entered Ctrl+C
+    trap proxy_envoy_down SIGINT
 
     echo Run go cmd.
     cd "${SCRIPT_DIR}/../cmd/api" || exit
     DOT_ENV=local ./api
 
-#    docker_cleanup
+    proxy_envoy_down
 }
-docker_run() {
-    if [[ "$DATABASE_URL" != "" ]]; then
-        docker-compose -f ${SCRIPT_DIR}/../deployments/local/docker-compose.yml up -d
-        # wait for DB is up
-        sleep 2
-    fi
+proxy_envoy_run() {
+    docker-compose -f ${SCRIPT_DIR}/../deployments/envoy/docker-compose.yml up -d
+    # wait for starting
+    sleep 5
 }
-docker_cleanup() {
-    if [[ "$DATABASE_URL" != "" ]]; then
-        docker-compose -f ${SCRIPT_DIR}/../deployments/local/docker-compose.yml down
-    fi
+proxy_envoy_down() {
+    docker-compose -f ${SCRIPT_DIR}/../deployments/envoy/docker-compose.yml down
 }
 
 cmd_test() {

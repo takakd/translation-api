@@ -1,0 +1,11 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  grpc-envoy-proxy:
+    image: envoyproxy/envoy:v1.16.1
+
+    build: .
+    ports:
+      - "9000:9000"
+      - "9901:9901"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
