@@ -12,6 +12,8 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc"
+	"os"
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -28,9 +30,30 @@ func NewServer() *Server {
 	return &Server{}
 }
 
+func (Server) Setup() {
+	ctx := appcontext.NewContext(context.Background(), "Server.Init")
+
+	if env := os.Getenv("DOT_ENV"); env != "" {
+		dotEnvFilename := ".env." + env
+		if err := godotenv.Load(dotEnvFilename); err != nil {
+			log.Fatal(ctx, fmt.Errorf(".env loading error: %w", err))
+		}
+		fmt.Printf("%s loaded\n", dotEnvFilename)
+	}
+
+	level := log.LevelDebug
+	switch os.Getenv("DEBUG_LEVEL") {
+	case "INFO":
+		level = log.LevelInfo
+	case "ERROR":
+		level = log.LevelError
+	}
+	log.SetLevel(level)
+}
+
 // Run start web server.
 func (Server) Run() {
-	ctx := appcontext.NewContext(context.Background(), "")
+	ctx := appcontext.NewContext(context.Background(), "Server.Run")
 
 	// Create gRPC server.
 	lis, err := net.Listen("tcp", port)
@@ -47,4 +70,5 @@ func (Server) Run() {
 	if err := gs.Serve(lis); err != nil {
 		log.Fatal(ctx, fmt.Sprintf("failed to serve: %v", err))
 	}
+	fmt.Println("test")
 }

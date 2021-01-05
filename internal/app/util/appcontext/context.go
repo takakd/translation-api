@@ -19,8 +19,8 @@ func NewContext(ctx context.Context, requestID string) Context {
 }
 
 // TODO returns empty context, which is only used in unit test.
-func TODO() *Context {
-	return &Context{}
+func TODO() Context {
+	return Context{}
 }
 
 // RequestID returns current request ID.

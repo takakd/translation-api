@@ -29,6 +29,14 @@ const (
 //	Error(ctx appcontext.Context, v ...interface{})
 //}
 
+// LogValue is contents of log.
+type LogValue map[string]interface{}
+
+// StringLogValue creates a simple string log.
+func StringLogValue(s string) LogValue {
+	return map[string]interface{}{"msg": s}
+}
+
 // Output log above this level.
 var logLevel Level
 
@@ -38,7 +46,7 @@ func SetLevel(level Level) {
 }
 
 // Debug outputs debug log.
-func Debug(ctx appcontext.Context, v map[string]interface{}) {
+func Debug(ctx appcontext.Context, v LogValue) {
 	defer func() {
 		// don't panic
 	}()
@@ -46,7 +54,7 @@ func Debug(ctx appcontext.Context, v map[string]interface{}) {
 }
 
 // Info outputs info log.
-func Info(ctx appcontext.Context, v map[string]interface{}) {
+func Info(ctx appcontext.Context, v LogValue) {
 	defer func() {
 		// don't panic
 	}()
@@ -54,7 +62,7 @@ func Info(ctx appcontext.Context, v map[string]interface{}) {
 }
 
 // Error outputs info log.
-func Error(ctx appcontext.Context, v map[string]interface{}) {
+func Error(ctx appcontext.Context, v LogValue) {
 	defer func() {
 		// don't panic
 	}()
@@ -66,7 +74,7 @@ func Fatal(ctx appcontext.Context, v ...interface{}) {
 	log.Fatal(v...)
 }
 
-func outputLog(ctx appcontext.Context, level Level, v map[string]interface{}) {
+func outputLog(ctx appcontext.Context, level Level, v LogValue) {
 	if logLevel < level {
 		// Ignore the log with lower priorities than the output level.
 		return
@@ -86,7 +94,7 @@ func outputLog(ctx appcontext.Context, level Level, v map[string]interface{}) {
 		label = "DEBUG"
 	}
 
-	data := map[string]interface{}{}
+	data := LogValue{}
 	for vk, vv := range v {
 		data[vk] = vv
 	}
@@ -106,5 +114,5 @@ func outputLog(ctx appcontext.Context, level Level, v map[string]interface{}) {
 	}
 
 	logger := log.New(os.Stdout, "", 0)
-	logger.Print(msg)
+	logger.Println(msg)
 }

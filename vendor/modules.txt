@@ -12,6 +12,7 @@ github.com/golang/protobuf/ptypes/timestamp
 github.com/google/uuid
 # github.com/joho/godotenv v1.3.0
 ## explicit
+github.com/joho/godotenv
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/objx v0.3.0

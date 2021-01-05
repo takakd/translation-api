@@ -30,7 +30,6 @@ exit 1
 
 build() {
     cd "${SCRIPT_DIR}/../cmd/api" || exit
-    #go build -p 2 -v -x -mod vendor main.go
     go build -p 2 -v -x api.go
 }
 
@@ -49,8 +48,8 @@ run() {
 #    trap docker_cleanup SIGINT
 
     echo Run go cmd.
-    cd "${SCRIPT_DIR}/../cmd" || exit
-    ${SCRIPT_DIR}/../cmd/api/api
+    cd "${SCRIPT_DIR}/../cmd/api" || exit
+    DOT_ENV=local ./api
 
 #    docker_cleanup
 }
