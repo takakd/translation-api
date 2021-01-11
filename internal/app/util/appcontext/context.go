@@ -23,6 +23,11 @@ func TODO() Context {
 	return Context{}
 }
 
+// Context returns based context.
+func (c *Context) Context() context.Context {
+	return c.ctx
+}
+
 // RequestID returns current request ID.
 func (c *Context) RequestID() string {
 	return c.requestID

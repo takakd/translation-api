@@ -41,12 +41,15 @@ func (Controller) Translate(ctx context.Context, r *translator.TranslateRequest)
 		"date":    now.Format(time.RFC3339),
 	})
 
+	apiReqBody := api.GoogleTranslationAPIRequestBody{
+		Text:       r.Text,
+		SourceLang: googleTranslationAPIRequestLang(r.SrcLang),
+		TargetLang: googleTranslationAPIRequestLang(r.TargetLang),
+	}
+
 	// Call Google translation API
 	googleAPI := api.NewGoogleTranslationAPI()
-	apiReqBody := api.GoogleTranslationAPIRequestBody{
-		Text: r.Text,
-		Lang: googleTranslationAPIRequestLang(r.Lang),
-	}
+
 	apiResp, err := googleAPI.Translate(appCtx, apiReqBody)
 	if err != nil {
 		return nil, fmt.Errorf("translate error: %w", err)
@@ -55,7 +58,8 @@ func (Controller) Translate(ctx context.Context, r *translator.TranslateRequest)
 	// Create a response
 	resp := &translator.TranslateResponse{
 		Text:           r.GetText(),
-		Lang:           r.GetLang(),
+		SrcLang:        r.GetSrcLang(),
+		TargetLang:     r.GetTargetLang(),
 		TranslatedText: apiResp.TranslatedText,
 	}
 	return resp, nil

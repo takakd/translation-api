@@ -12,14 +12,16 @@ enum LangType {
 // The request message containing the user's name.
 message TranslateRequest {
   string text = 1;
-  LangType lang = 2;
+  LangType srcLang = 2;
+  LangType targetLang = 3;
 }
 
 // The response message containing the greetings
 message TranslateResponse {
   string text = 1;
-  LangType lang = 2;
-  string translatedText = 3;
+  LangType srcLang = 2;
+  LangType targetLang = 3;
+  string translatedText = 4;
 }
 
 // The greeting service definition.

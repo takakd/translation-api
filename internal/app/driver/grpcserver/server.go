@@ -11,12 +11,14 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc"
 	"os"
+
 	"github.com/joho/godotenv"
+	"google.golang.org/grpc"
 )
 
 const (
+	// DefaultPort is used as server port if environment variables does not exists.
 	DefaultPort = "50051"
 )
 
@@ -31,6 +33,7 @@ func NewServer() *Server {
 	return &Server{}
 }
 
+// Setup initialize server.
 func (s *Server) Setup() {
 	ctx := appcontext.NewContext(context.Background(), "Server.Init")
 
@@ -61,8 +64,6 @@ func (s *Server) Setup() {
 // Run start web server.
 func (s *Server) Run() {
 	ctx := appcontext.NewContext(context.Background(), "Server.Run")
-
-	fmt.Println(s.port)
 
 	// Create gRPC server.
 	lis, err := net.Listen("tcp", s.port)
