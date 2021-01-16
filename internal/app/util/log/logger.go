@@ -2,8 +2,8 @@
 package log
 
 import (
-	"api/internal/app/util/appcontext"
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"os"
@@ -20,14 +20,6 @@ const (
 	// LevelDebug outputs all level logs.
 	LevelDebug
 )
-
-//// Logger defines logging methods.
-//type Logger interface {
-//	SetLevel(level Level)
-//	Debug(ctx appcontext.Context, v ...interface{})
-//	Info(ctx appcontext.Context, v ...interface{})
-//	Error(ctx appcontext.Context, v ...interface{})
-//}
 
 // Value is contents of log.
 type Value map[string]interface{}
@@ -46,7 +38,7 @@ func SetLevel(level Level) {
 }
 
 // Debug outputs debug log.
-func Debug(ctx appcontext.Context, v Value) {
+func Debug(ctx context.Context, v Value) {
 	defer func() {
 		// don't panic
 	}()
@@ -54,7 +46,7 @@ func Debug(ctx appcontext.Context, v Value) {
 }
 
 // Info outputs info log.
-func Info(ctx appcontext.Context, v Value) {
+func Info(ctx context.Context, v Value) {
 	defer func() {
 		// don't panic
 	}()
@@ -62,7 +54,7 @@ func Info(ctx appcontext.Context, v Value) {
 }
 
 // Error outputs info log.
-func Error(ctx appcontext.Context, v Value) {
+func Error(ctx context.Context, v Value) {
 	defer func() {
 		// don't panic
 	}()
@@ -70,11 +62,11 @@ func Error(ctx appcontext.Context, v Value) {
 }
 
 // Fatal calls log.Fatal.
-func Fatal(ctx appcontext.Context, v ...interface{}) {
+func Fatal(ctx context.Context, v ...interface{}) {
 	log.Fatal(v...)
 }
 
-func outputLog(ctx appcontext.Context, level Level, v Value) {
+func outputLog(ctx context.Context, level Level, v Value) {
 	if logLevel < level {
 		// Ignore the log with lower priorities than the output level.
 		return
@@ -99,7 +91,7 @@ func outputLog(ctx appcontext.Context, level Level, v Value) {
 		data[vk] = vv
 	}
 	data["level"] = label
-	data["rid"] = ctx.RequestID()
+	data["rid"] = getRequestID(ctx)
 
 	var msg string
 	if body, err := json.Marshal(data); err == nil {

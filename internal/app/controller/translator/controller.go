@@ -3,7 +3,6 @@ package translator
 import (
 	"api/internal/app/driver/api"
 	"api/internal/app/grpc/translator"
-	"api/internal/app/util/appcontext"
 	"api/internal/app/util/log"
 	"context"
 	"fmt"
@@ -32,19 +31,19 @@ func googleTranslationAPIRequestLang(langType translator.LangType) api.LanguageT
 
 // Translate processes a method of Translator gRPC service.
 func (Controller) Translate(ctx context.Context, r *translator.TranslateRequest) (*translator.TranslateResponse, error) {
-	appCtx := appcontext.NewContext(ctx, uuid.New().String())
+	appCtx := log.WithLogContextValue(ctx, uuid.New().String())
 
 	// Access log
 	now := time.Now()
-	log.Info(appCtx, map[string]interface{}{
+	log.Info(appCtx, log.Value{
 		"request": r,
 		"date":    now.Format(time.RFC3339),
 	})
 
 	apiReqBody := api.GoogleTranslationAPIRequestBody{
-		Text:       r.Text,
-		SourceLang: googleTranslationAPIRequestLang(r.SrcLang),
-		TargetLang: googleTranslationAPIRequestLang(r.TargetLang),
+		Text:       r.GetText(),
+		SourceLang: googleTranslationAPIRequestLang(r.GetSrcLang()),
+		TargetLang: googleTranslationAPIRequestLang(r.GetTargetLang()),
 	}
 
 	// Call Google translation API

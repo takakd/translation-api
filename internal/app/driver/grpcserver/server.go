@@ -6,7 +6,6 @@ import (
 
 	"api/internal/app/controller/translator"
 	pb "api/internal/app/grpc/translator"
-	"api/internal/app/util/appcontext"
 	"api/internal/app/util/log"
 	"context"
 	"fmt"
@@ -35,7 +34,7 @@ func NewServer() *Server {
 
 // Setup initialize server.
 func (s *Server) Setup() {
-	ctx := appcontext.NewContext(context.Background(), "Server.Init")
+	ctx := context.Background()
 
 	if env := os.Getenv("DOT_ENV"); env != "" {
 		dotEnvFilename := ".env." + env
@@ -63,7 +62,7 @@ func (s *Server) Setup() {
 
 // Run start web server.
 func (s *Server) Run() {
-	ctx := appcontext.NewContext(context.Background(), "Server.Run")
+	ctx := context.Background()
 
 	// Create gRPC server.
 	lis, err := net.Listen("tcp", s.port)
