@@ -1,4 +1,4 @@
-package api
+package google
 
 import (
 	"fmt"
@@ -11,18 +11,19 @@ import (
 	translatepb "google.golang.org/genproto/googleapis/cloud/translate/v3"
 )
 
-// GoogleTranslationAPI serves Google Translate API handlers used by the app.
-type GoogleTranslationAPI struct {
-	projectID string
-	apiKey    string
+// TranslationAPI serves Google Translate API handlers.
+type TranslationAPI struct {
 }
 
-// NewGoogleTranslationAPI creates new struct.
-func NewGoogleTranslationAPI() *GoogleTranslationAPI {
-	a := &GoogleTranslationAPI{}
-	a.projectID = os.Getenv("GOOGLE_PROJECT_ID")
-	a.apiKey = os.Getenv("GOOGLE_API_KEY")
-	return a
+// NewTranslationAPI creates new struct.
+func NewTranslationAPI() (*TranslationAPI, error) {
+	for _, v := range []string{"GOOGLE_PROJECT_ID", "GOOGLE_API_KEY"} {
+		if os.Getenv(v) == "" {
+			return nil, fmt.Errorf(`environment error: %s`, v)
+		}
+	}
+	a := &TranslationAPI{}
+	return a, nil
 }
 
 // LanguageType is type of translation language.
@@ -46,7 +47,6 @@ func (l LanguageType) languageCode() (string, error) {
 	case JP:
 		code = "ja"
 	case EN:
-		// TODO: check, en-US?
 		code = "en"
 	}
 
@@ -56,15 +56,15 @@ func (l LanguageType) languageCode() (string, error) {
 	return code, nil
 }
 
-// GoogleTranslationAPIRequestBody is a parameter of Translate method.
-type GoogleTranslationAPIRequestBody struct {
+// TranslationAPIRequestBody is a parameter of Translate method.
+type TranslationAPIRequestBody struct {
 	Text       string
 	SourceLang LanguageType
 	TargetLang LanguageType
 }
 
 // Returns TranslateTextRequest with Google API projectID.
-func (r *GoogleTranslationAPIRequestBody) translateRequest(projectID string) (*translatepb.TranslateTextRequest, error) {
+func (r *TranslationAPIRequestBody) translateRequest(projectID string) (*translatepb.TranslateTextRequest, error) {
 	sourceLang, err := r.SourceLang.languageCode()
 	if err != nil {
 		return nil, fmt.Errorf("language code error: %w", err)
@@ -86,28 +86,28 @@ func (r *GoogleTranslationAPIRequestBody) translateRequest(projectID string) (*t
 	return req, nil
 }
 
-// GoogleTranslationAPIResponseBody is a response of Translate method.
-type GoogleTranslationAPIResponseBody struct {
+// TranslationAPIResponseBody is a response of Translate method.
+type TranslationAPIResponseBody struct {
 	Text           string
 	Lang           LanguageType
 	TranslatedText string
 }
 
 // Translate returns translated text with Google Translate API.
-func (a GoogleTranslationAPI) Translate(ctx context.Context, body GoogleTranslationAPIRequestBody) (GoogleTranslationAPIResponseBody, error) {
-	resp := GoogleTranslationAPIResponseBody{
+func (a TranslationAPI) Translate(ctx context.Context, body TranslationAPIRequestBody) (TranslationAPIResponseBody, error) {
+	resp := TranslationAPIResponseBody{
 		Text:           body.Text,
 		Lang:           body.TargetLang,
 		TranslatedText: "",
 	}
 
-	apiReq, err := body.translateRequest(a.projectID)
+	apiReq, err := body.translateRequest(os.Getenv("GOOGLE_PROJECT_ID"))
 	if err != nil {
 		return resp, fmt.Errorf("request creation error: %w", err)
 	}
 
 	// Ref: https://cloud.google.com/translate/docs/reference/rpc/google.cloud.translation.v3#google.cloud.translation.v3.TranslationService
-	client, err := translate.NewTranslationClient(ctx, option.WithCredentialsJSON([]byte(a.apiKey)))
+	client, err := translate.NewTranslationClient(ctx, option.WithCredentialsJSON([]byte(os.Getenv("GOOGLE_API_KEY"))))
 	if err != nil {
 		return resp, fmt.Errorf("api initialize error: %w", err)
 	}

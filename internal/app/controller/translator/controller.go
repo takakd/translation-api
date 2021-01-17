@@ -1,12 +1,13 @@
 package translator
 
 import (
-	"api/internal/app/driver/api"
 	"api/internal/app/grpc/translator"
 	"api/internal/app/util/log"
 	"context"
 	"fmt"
 	"time"
+
+	"api/internal/app/driver/aws"
 
 	"github.com/google/uuid"
 )
@@ -21,10 +22,18 @@ func NewController() *Controller {
 	return &Controller{}
 }
 
-func googleTranslationAPIRequestLang(langType translator.LangType) api.LanguageType {
-	l := api.EN
+//func googleTranslationAPIRequestLang(langType translator.LangType) google.LanguageType {
+//	l := google.EN
+//	if langType == translator.LangType_JP {
+//		l = google.JP
+//	}
+//	return l
+//}
+
+func awsTranslationAPIRequestLang(langType translator.LangType) aws.LanguageType {
+	l := aws.EN
 	if langType == translator.LangType_JP {
-		l = api.JP
+		l = aws.JP
 	}
 	return l
 }
@@ -40,16 +49,18 @@ func (Controller) Translate(ctx context.Context, r *translator.TranslateRequest)
 		"date":    now.Format(time.RFC3339),
 	})
 
-	apiReqBody := api.GoogleTranslationAPIRequestBody{
+	awsReqBody := aws.TranslateInput{
 		Text:       r.GetText(),
-		SourceLang: googleTranslationAPIRequestLang(r.GetSrcLang()),
-		TargetLang: googleTranslationAPIRequestLang(r.GetTargetLang()),
+		SourceLang: awsTranslationAPIRequestLang(r.GetSrcLang()),
+		TargetLang: awsTranslationAPIRequestLang(r.GetTargetLang()),
 	}
 
-	// Call Google translation API
-	googleAPI := api.NewGoogleTranslationAPI()
+	awsAPI, err := aws.NewTranslationAPI()
+	if err != nil {
+		return nil, fmt.Errorf("translation api error: %w", err)
+	}
 
-	apiResp, err := googleAPI.Translate(appCtx, apiReqBody)
+	apiOutput, err := awsAPI.Translate(ctx, awsReqBody)
 	if err != nil {
 		return nil, fmt.Errorf("translate error: %w", err)
 	}
@@ -59,7 +70,33 @@ func (Controller) Translate(ctx context.Context, r *translator.TranslateRequest)
 		Text:           r.GetText(),
 		SrcLang:        r.GetSrcLang(),
 		TargetLang:     r.GetTargetLang(),
-		TranslatedText: apiResp.TranslatedText,
+		TranslatedText: apiOutput.TranslatedText,
 	}
+
+	//// Google
+	//apiReqBody := google.TranslationAPIRequestBody{
+	//	Text:       r.GetText(),
+	//	SourceLang: googleTranslationAPIRequestLang(r.GetSrcLang()),
+	//	TargetLang: googleTranslationAPIRequestLang(r.GetTargetLang()),
+	//}
+	//
+	//// Call Google translation API
+	//googleAPI, err := google.NewTranslationAPI()
+	//if err != nil {
+	//	return nil, fmt.Errorf("translation api error: %w", err)
+	//}
+	//
+	//apiResp, err := googleAPI.Translate(appCtx, apiReqBody)
+	//if err != nil {
+	//	return nil, fmt.Errorf("translate error: %w", err)
+	//}
+	//
+	//// Create a response
+	//resp := &translator.TranslateResponse{
+	//	Text:           r.GetText(),
+	//	SrcLang:        r.GetSrcLang(),
+	//	TargetLang:     r.GetTargetLang(),
+	//	TranslatedText: apiResp.TranslatedText,
+	//}
 	return resp, nil
 }
