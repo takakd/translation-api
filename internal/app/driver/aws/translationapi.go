@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"api/internal/app/controller/translator"
+
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/translate"
 )
@@ -24,70 +26,47 @@ func NewTranslationAPI() (*TranslationAPI, error) {
 	return a, nil
 }
 
-// LanguageType is type of translation language.
-type LanguageType string
-
-const (
-	// JP language type
-	JP LanguageType = "JP"
-	// EN language type
-	EN LanguageType = "EN"
-)
-
 // Returns language code of AWS Translate API.
 // Ref:
-// https://docs.aws.amazon.com/translate/latest/dg/what-is.html#what-is-languages
-func (l LanguageType) languageCode() (string, error) {
+// 		https://docs.aws.amazon.com/translate/latest/dg/what-is.html#what-is-languages
+func languageCode(lang translator.LanguageType) (string, error) {
 	code := ""
-	switch l {
-	case JP:
+	switch lang {
+	case translator.JP:
 		code = "ja"
-	case EN:
+	case translator.EN:
 		code = "en"
 	}
 
 	if code == "" {
-		return "", fmt.Errorf("unkown type: %v", l)
+		return "", fmt.Errorf("unkown type: %v", lang)
 	}
 	return code, nil
 }
 
-// TranslateInput is a parameter of Translate method.
-type TranslateInput struct {
-	Text       string
-	SourceLang LanguageType
-	TargetLang LanguageType
-}
-
-func (t *TranslateInput) textInput() (*translate.TextInput, error) {
-	sourceLang, err := t.SourceLang.languageCode()
+func textInput(text string, srcLang, targetLang translator.LanguageType) (*translate.TextInput, error) {
+	sourceCode, err := languageCode(srcLang)
 	if err != nil {
 		return nil, fmt.Errorf("language code error: %w", err)
 	}
 
-	targetLang, err := t.TargetLang.languageCode()
+	targetCode, err := languageCode(targetLang)
 	if err != nil {
 		return nil, fmt.Errorf("language code error: %w", err)
 	}
 
 	input := &translate.TextInput{
-		Text:               &t.Text,
-		SourceLanguageCode: &sourceLang,
-		TargetLanguageCode: &targetLang,
+		Text:               &text,
+		SourceLanguageCode: &sourceCode,
+		TargetLanguageCode: &targetCode,
 	}
 	return input, nil
 }
 
-// TranslateOutput is a response of Translate method.
-type TranslateOutput struct {
-	Text           string
-	Lang           LanguageType
-	TranslatedText string
-}
-
 // Translate translates text with AWS Translate service.
-func (a TranslationAPI) Translate(ctx context.Context, input TranslateInput) (*TranslateOutput, error) {
-	svcInput, err := input.textInput()
+func (a TranslationAPI) Translate(ctx context.Context, text string, srcLang translator.LanguageType, targetLang translator.LanguageType) (*translator.Result, error) {
+
+	svcInput, err := textInput(text, srcLang, targetLang)
 	if err != nil {
 		return nil, err
 	}
@@ -106,9 +85,9 @@ func (a TranslationAPI) Translate(ctx context.Context, input TranslateInput) (*T
 		return nil, fmt.Errorf("translate error: %w", err)
 	}
 
-	return &TranslateOutput{
-		Text:           input.Text,
-		Lang:           input.TargetLang,
-		TranslatedText: *svcOutput.TranslatedText,
+	return &translator.Result{
+		Text:        *svcOutput.TranslatedText,
+		Lang:        targetLang,
+		ServiceName: translator.AWS,
 	}, nil
 }

@@ -72,7 +72,10 @@ func (s *Server) Run() {
 	gs := grpc.NewServer()
 
 	// Set method handlers.
-	translatorCtrl := translator.NewController()
+	translatorCtrl, err := translator.NewController()
+	if err != nil {
+		log.Fatal(ctx, fmt.Sprintf("failed to setup api: %v", err))
+	}
 	pb.RegisterTranslatorServer(gs, translatorCtrl)
 
 	// Run.

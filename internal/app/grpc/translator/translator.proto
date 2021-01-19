@@ -20,8 +20,14 @@ message TranslateRequest {
 message TranslateResponse {
   string text = 1;
   LangType srcLang = 2;
-  LangType targetLang = 3;
-  string translatedText = 4;
+
+  map<string, TranslatedText> translatedTextList = 3;
+}
+
+// https://developers.google.com/protocol-buffers/docs/proto3#maps
+message TranslatedText {
+  string text = 1;
+  LangType lang = 2;
 }
 
 // The greeting service definition.
