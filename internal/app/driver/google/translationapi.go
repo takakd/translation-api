@@ -17,6 +17,8 @@ import (
 type TranslationAPI struct {
 }
 
+var _ translatorapp.TextTranslator = (*TranslationAPI)(nil)
+
 // NewTranslationAPI creates new struct.
 func NewTranslationAPI() (*TranslationAPI, error) {
 	for _, v := range []string{"GOOGLE_PROJECT_ID", "GOOGLE_API_KEY"} {
@@ -93,8 +95,8 @@ func (a TranslationAPI) Translate(ctx context.Context, text string, srcLang tran
 	}
 
 	result := &translatorapp.Result{
-		Lang:        targetLang,
-		ServiceName: translatorapp.Google,
+		Lang:    targetLang,
+		Service: translatorapp.Google,
 	}
 	for _, translation := range apiResp.GetTranslations() {
 		result.Text = translation.TranslatedText

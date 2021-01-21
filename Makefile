@@ -4,6 +4,15 @@ run:
 	@echo "==> Starting run on local..."
 	@sh -c "sh '$(CURDIR)/scripts/local.sh' build"
 	@sh -c "sh '$(CURDIR)/scripts/local.sh' run"
+run_envoy:
+	@echo "==> Starting envoy on local..."
+	@sh -c "sh '$(CURDIR)/scripts/local.sh' run:envoy"
+stop_envoy:
+	@echo "==> Stop envoy on local..."
+	@sh -c "sh '$(CURDIR)/scripts/local.sh' stop:envoy"
+run_go:
+	@echo "==> Go start server on local..."
+	@sh -c "sh '$(CURDIR)/scripts/local.sh' run:go"
 
 test:
 	@echo "==> Testing..."

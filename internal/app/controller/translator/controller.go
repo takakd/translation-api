@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"api/internal/app/util/di"
+
 	"github.com/google/uuid"
-	"golang.org/x/sync/errgroup"
 )
 
 // Controller handles translate API.
@@ -20,25 +21,34 @@ type Controller struct {
 
 // NewController creates new struct.
 func NewController() (*Controller, error) {
-	c := &Controller{}
-
 	var (
+		tmp interface{}
 		err error
-		t   TextTranslator
 	)
 
-	//t, err = aws.NewTranslationAPI()
-	//if err != nil {
-	//	return nil, fmt.Errorf("NewController error: %w", err)
-	//}
-	//c.translatorList = append(c.translatorList, t)
-	//
-	//t, err = google.NewTranslationAPI()
-	//if err != nil {
-	//	return nil, fmt.Errorf("NewController error: %w", err)
-	//}
-	c.translatorList = append(c.translatorList, t)
+	tmp, err = di.Get("translator.awsTextTranslator")
+	if err != nil {
+		return nil, fmt.Errorf("nil error: awsTextTranslator")
+	}
+	awsTextTranslator, ok := tmp.(TextTranslator)
+	if !ok {
+		return nil, fmt.Errorf("type error: awsTextTranslator")
+	}
 
+	tmp, err = di.Get("translator.googleTextTranslator")
+	if err != nil {
+		return nil, fmt.Errorf("nil error: googleTextTranslator")
+	}
+	googleTextTranslator, ok := tmp.(TextTranslator)
+	if !ok {
+		return nil, fmt.Errorf("type error: googleTextTranslator")
+	}
+
+	c := &Controller{}
+	c.translatorList = []TextTranslator{
+		awsTextTranslator,
+		googleTextTranslator,
+	}
 	return c, nil
 }
 
@@ -46,34 +56,40 @@ func NewController() (*Controller, error) {
 type TranslateParallelResult struct {
 	translated  *translator.TranslatedText
 	serviceType ServiceType
+	err         error
 }
 
 // TranslateParallel translate text in parallel.
-func (c Controller) TranslateParallel(ctx context.Context, ch chan<- *TranslateParallelResult, r *translator.TranslateRequest, eg errgroup.Group) {
+func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *TranslateParallelResult, r *translator.TranslateRequest) {
+
 	for _, t := range c.translatorList {
-		eg.Go(func() error {
+		t := t
+		go func(ctx context.Context, ch chan<- *TranslateParallelResult, r *translator.TranslateRequest, t TextTranslator) {
+			result := &TranslateParallelResult{
+			}
+
 			// Call API
-			result, err := t.Translate(ctx, r.GetText(), toTranslatorLang(r.GetSrcLang()), toTranslatorLang(r.GetTargetLang()))
-			if err != nil {
-				return fmt.Errorf("translate error: %w", err)
+			if apiResult, err := t.Translate(ctx, r.GetText(), toTranslatorLang(r.GetSrcLang()), toTranslatorLang(r.GetTargetLang())); err != nil {
+				result.err = err
+				ch <- result
+			} else {
+				result.translated = &translator.TranslatedText{
+					Text: apiResult.Text,
+					Lang: toGrpcLang(apiResult.Lang),
+				}
+				result.serviceType = apiResult.Service
 			}
 
 			// Send result
-			ch <- &TranslateParallelResult{
-				translated: &translator.TranslatedText{
-					Text: result.Text,
-					Lang: toGrpcLang(result.Lang),
-				},
-				serviceType: result.Service,
-			}
+			ch <- result
 
-			return nil
-		})
+			fmt.Println("done")
+		}(ctx, ch, r, t)
 	}
 }
 
 // Translate processes a method of Translator gRPC service.
-func (c Controller) Translate(ctx context.Context, r *translator.TranslateRequest) (*translator.TranslateResponse, error) {
+func (c *Controller) Translate(ctx context.Context, r *translator.TranslateRequest) (*translator.TranslateResponse, error) {
 	appCtx := log.WithLogContextValue(ctx, uuid.New().String())
 	appCtx, cancel := context.WithTimeout(appCtx, time.Minute)
 	defer cancel()
@@ -93,20 +109,23 @@ func (c Controller) Translate(ctx context.Context, r *translator.TranslateReques
 	resp.TranslatedTextList = make(map[string]*translator.TranslatedText)
 
 	// Call translation in parallel.
-	var eg errgroup.Group
 	ch := make(chan *TranslateParallelResult)
-	c.TranslateParallel(ctx, ch, r, eg)
+	c.TranslateParallel(ctx, ch, r)
+	//if err != nil {
+	//	return nil, fmt.Errorf("translation error: %w", err)
+	//}
 
-	// Wait
-	err := eg.Wait()
-	if err != nil {
-		return nil, err
-	}
+	fmt.Println("hoge")
 
 	// Set translation result.
+	// TOOD: https://hori-ryota.com/blog/golang-channel-pattern/
+	// Wait with other go routine.
 	for c := range ch {
+		fmt.Println(c)
 		resp.TranslatedTextList[string(c.serviceType)] = c.translated
 	}
+
+	fmt.Print("hogehoge")
 
 	return resp, nil
 }

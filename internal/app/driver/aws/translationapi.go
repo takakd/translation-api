@@ -15,6 +15,8 @@ import (
 type TranslationAPI struct {
 }
 
+var _ translator.TextTranslator = (*TranslationAPI)(nil)
+
 // NewTranslationAPI creates new struct.
 func NewTranslationAPI() (*TranslationAPI, error) {
 	for _, v := range []string{"AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"} {
@@ -64,7 +66,7 @@ func textInput(text string, srcLang, targetLang translator.LanguageType) (*trans
 }
 
 // Translate translates text with AWS Translate service.
-func (a TranslationAPI) Translate(ctx context.Context, text string, srcLang translator.LanguageType, targetLang translator.LanguageType) (*translator.Result, error) {
+func (a *TranslationAPI) Translate(ctx context.Context, text string, srcLang translator.LanguageType, targetLang translator.LanguageType) (*translator.Result, error) {
 
 	svcInput, err := textInput(text, srcLang, targetLang)
 	if err != nil {
@@ -86,8 +88,8 @@ func (a TranslationAPI) Translate(ctx context.Context, text string, srcLang tran
 	}
 
 	return &translator.Result{
-		Text:        *svcOutput.TranslatedText,
-		Lang:        targetLang,
-		ServiceName: translator.AWS,
+		Text:    *svcOutput.TranslatedText,
+		Lang:    targetLang,
+		Service: translator.AWS,
 	}, nil
 }

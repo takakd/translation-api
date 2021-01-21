@@ -49,9 +49,16 @@ run() {
 
     echo Run go cmd.
     cd "${SCRIPT_DIR}/../cmd/api" || exit
-    DOT_ENV=local ./api
+    #DOT_ENV=local ./api
+    DOT_ENV=local go run ./api.go
 
     proxy_envoy_down
+}
+run_go() {
+    echo Run go cmd.
+    cd "${SCRIPT_DIR}/../cmd/api" || exit
+    #DOT_ENV=local ./api
+    DOT_ENV=local go run ./api.go
 }
 proxy_envoy_run() {
     docker-compose -f ${SCRIPT_DIR}/../deployments/envoy/docker-compose.yml up -d
@@ -95,6 +102,12 @@ elif [[ $1 = "fmt" ]]; then
     fmt
 elif [[ $1 = "run" ]]; then
     run
+elif [[ $1 = "run:go" ]]; then
+    run_go
+elif [[ $1 = "run:envoy" ]]; then
+    proxy_envoy_run
+elif [[ $1 = "stop:envoy" ]]; then
+    proxy_envoy_down
 elif [[ $1 = "test" ]]; then
     cmd_test
 elif [[ $1 = "install" ]]; then
