@@ -9,6 +9,8 @@ import (
 
 	"api/internal/app/util/di"
 
+	"sync"
+
 	"github.com/google/uuid"
 )
 
@@ -62,11 +64,18 @@ type TranslateParallelResult struct {
 // TranslateParallel translate text in parallel.
 func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *TranslateParallelResult, r *translator.TranslateRequest) {
 
+	var wg sync.WaitGroup
+
 	for _, t := range c.translatorList {
+		// Increment counter
+		wg.Add(1)
+
 		t := t
 		go func(ctx context.Context, ch chan<- *TranslateParallelResult, r *translator.TranslateRequest, t TextTranslator) {
-			result := &TranslateParallelResult{
-			}
+			// Decrement the counter when the goroutine completes.
+			defer wg.Done()
+
+			result := &TranslateParallelResult{}
 
 			// Call API
 			if apiResult, err := t.Translate(ctx, r.GetText(), toTranslatorLang(r.GetSrcLang()), toTranslatorLang(r.GetTargetLang())); err != nil {
@@ -86,6 +95,12 @@ func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *Translate
 			fmt.Println("done")
 		}(ctx, ch, r, t)
 	}
+
+	// Wait group and close channel.
+	go func(ch chan<- *TranslateParallelResult) {
+		wg.Wait()
+		close(ch)
+	}(ch)
 }
 
 // Translate processes a method of Translator gRPC service.
@@ -111,17 +126,15 @@ func (c *Controller) Translate(ctx context.Context, r *translator.TranslateReque
 	// Call translation in parallel.
 	ch := make(chan *TranslateParallelResult)
 	c.TranslateParallel(ctx, ch, r)
-	//if err != nil {
-	//	return nil, fmt.Errorf("translation error: %w", err)
-	//}
 
 	fmt.Println("hoge")
 
-	// Set translation result.
-	// TOOD: https://hori-ryota.com/blog/golang-channel-pattern/
-	// Wait with other go routine.
+	// Wait for the API response.
 	for c := range ch {
 		fmt.Println(c)
+		if c.err != nil {
+			return nil, fmt.Errorf("translation error: %s, %w", c.serviceType, c.err)
+		}
 		resp.TranslatedTextList[string(c.serviceType)] = c.translated
 	}
 
