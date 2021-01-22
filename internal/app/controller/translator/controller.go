@@ -64,13 +64,17 @@ type TranslateParallelResult struct {
 // TranslateParallel translate text in parallel.
 func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *TranslateParallelResult, r *translator.TranslateRequest) {
 
+	// Wait for API response.
 	var wg sync.WaitGroup
 
 	for _, t := range c.translatorList {
 		// Increment counter
 		wg.Add(1)
 
+		// Copy as Value
 		t := t
+
+		// Call each API
 		go func(ctx context.Context, ch chan<- *TranslateParallelResult, r *translator.TranslateRequest, t TextTranslator) {
 			// Decrement the counter when the goroutine completes.
 			defer wg.Done()
@@ -96,7 +100,7 @@ func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *Translate
 		}(ctx, ch, r, t)
 	}
 
-	// Wait group and close channel.
+	// Wait go routines and close channel.
 	go func(ch chan<- *TranslateParallelResult) {
 		wg.Wait()
 		close(ch)
