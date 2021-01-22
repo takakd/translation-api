@@ -95,8 +95,6 @@ func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *Translate
 
 			// Send result
 			ch <- result
-
-			fmt.Println("done")
 		}(ctx, ch, r, t)
 	}
 
@@ -131,18 +129,13 @@ func (c *Controller) Translate(ctx context.Context, r *translator.TranslateReque
 	ch := make(chan *TranslateParallelResult)
 	c.TranslateParallel(ctx, ch, r)
 
-	fmt.Println("hoge")
-
 	// Wait for the API response.
 	for c := range ch {
-		fmt.Println(c)
 		if c.err != nil {
 			return nil, fmt.Errorf("translation error: %s, %w", c.serviceType, c.err)
 		}
 		resp.TranslatedTextList[string(c.serviceType)] = c.translated
 	}
-
-	fmt.Print("hogehoge")
 
 	return resp, nil
 }
