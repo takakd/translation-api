@@ -1,10 +1,11 @@
-// Package log provides logging feature.
+// Package log provides logging.
 package log
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 )
@@ -53,7 +54,7 @@ func Info(ctx context.Context, v Value) {
 	outputLog(ctx, LevelInfo, v)
 }
 
-// Error outputs info log.
+// Error outputs error log.
 func Error(ctx context.Context, v Value) {
 	defer func() {
 		// don't panic
@@ -99,10 +100,10 @@ func outputLog(ctx context.Context, level Level, v Value) {
 		if json.Compact(&buf, body); err == nil {
 			msg = buf.String()
 		} else {
-			msg = "marshal error in logging"
+			msg = fmt.Sprintf("json compact error: %v", err)
 		}
 	} else {
-		msg = "marshal error in logging"
+		msg = fmt.Sprintf("marshal error: %v", err)
 	}
 
 	logger := log.New(os.Stdout, "", 0)
