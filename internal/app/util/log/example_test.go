@@ -1,11 +1,15 @@
 package log_test
 
 import (
+	log2 "api/internal/app/driver/log"
 	"api/internal/app/util/log"
 	"context"
 )
 
 func ExampleDebug() {
+	logger := log2.NewStdoutLogger()
+	log.SetLogger(logger)
+
 	log.SetLevel(log.LevelDebug)
 
 	ctx := context.Background()

@@ -5,7 +5,7 @@ go 1.14
 require (
 	cloud.google.com/go v0.74.0
 	github.com/aws/aws-sdk-go v1.36.28
-	github.com/golang/mock v1.4.4 // indirect
+	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
 	github.com/google/uuid v1.1.3
 	github.com/joho/godotenv v1.3.0

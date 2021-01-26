@@ -8,17 +8,18 @@ var (
 )
 
 // DI is implemented by an application which uses DI container.
+// Pass args if the concrete struct needs arguments.
 type DI interface {
 	// Get returns a concrete struct identified by name.
-	Get(name string) (interface{}, error)
+	Get(name string, args ...interface{}) (interface{}, error)
 }
 
 // Get is a helper function.
-func Get(name string) (interface{}, error) {
+func Get(name string, args ...interface{}) (interface{}, error) {
 	if di == nil {
 		return nil, fmt.Errorf("not set container error")
 	}
-	return di.Get(name)
+	return di.Get(name, args...)
 }
 
 // SetDi sets DI used by an application.

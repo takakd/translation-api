@@ -2,12 +2,7 @@
 package log
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"os"
 )
 
 // Level represents the type of logging level.
@@ -30,12 +25,28 @@ func StringValue(s string) Value {
 	return map[string]interface{}{"msg": s}
 }
 
-// Output log above this level.
-var logLevel Level
+// Logger is implemented by an application which uses Logger.
+type Logger interface {
+	SetLevel(level Level)
+	Debug(ctx context.Context, v Value)
+	Info(ctx context.Context, v Value)
+	Error(ctx context.Context, v Value)
+	Fatal(v Value)
+}
+
+// Use this interface for logging.
+var logger Logger
+
+// SetLogger sets the logger which is called log.Info, log.Error...
+func SetLogger(l Logger) {
+	logger = l
+}
 
 // SetLevel sets logging level.
 func SetLevel(level Level) {
-	logLevel = level
+	if logger != nil {
+		logger.SetLevel(level)
+	}
 }
 
 // Debug outputs debug log.
@@ -43,7 +54,7 @@ func Debug(ctx context.Context, v Value) {
 	defer func() {
 		// don't panic
 	}()
-	outputLog(ctx, LevelDebug, v)
+	logger.Debug(ctx, v)
 }
 
 // Info outputs info log.
@@ -51,7 +62,7 @@ func Info(ctx context.Context, v Value) {
 	defer func() {
 		// don't panic
 	}()
-	outputLog(ctx, LevelInfo, v)
+	logger.Info(ctx, v)
 }
 
 // Error outputs error log.
@@ -59,53 +70,13 @@ func Error(ctx context.Context, v Value) {
 	defer func() {
 		// don't panic
 	}()
-	outputLog(ctx, LevelError, v)
+	logger.Error(ctx, v)
 }
 
-// Fatal calls log.Fatal.
-func Fatal(ctx context.Context, v ...interface{}) {
-	log.Fatal(v...)
-}
-
-func outputLog(ctx context.Context, level Level, v Value) {
-	if logLevel < level {
-		// Ignore the log with lower priorities than the output level.
-		return
-	}
-
-	if len(v) == 0 {
-		return
-	}
-
-	var label string
-	switch level {
-	case LevelError:
-		label = "ERROR"
-	case LevelInfo:
-		label = "INFO"
-	case LevelDebug:
-		label = "DEBUG"
-	}
-
-	data := Value{}
-	for vk, vv := range v {
-		data[vk] = vv
-	}
-	data["level"] = label
-	data["rid"] = getRequestID(ctx)
-
-	var msg string
-	if body, err := json.Marshal(data); err == nil {
-		var buf bytes.Buffer
-		if json.Compact(&buf, body); err == nil {
-			msg = buf.String()
-		} else {
-			msg = fmt.Sprintf("json compact error: %v", err)
-		}
-	} else {
-		msg = fmt.Sprintf("marshal error: %v", err)
-	}
-
-	logger := log.New(os.Stdout, "", 0)
-	logger.Println(msg)
+// Fatal outputs log and exit the application.
+func Fatal(v Value) {
+	defer func() {
+		// don't panic
+	}()
+	logger.Fatal(v)
 }

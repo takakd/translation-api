@@ -4,13 +4,13 @@ import (
 	"api/internal/app/util/di"
 )
 
-// Container implements DI on production env.
+// Container implements DI.
 type Container struct {
 }
 
 var _ di.DI = (*Container)(nil)
 
-// Get returns interfaces corresponding name.
-func (d *Container) Get(name string) (interface{}, error) {
+// Get returns a concrete struct identified by name.
+func (d *Container) Get(name string, args ...interface{}) (interface{}, error) {
 	return nil, nil
 }

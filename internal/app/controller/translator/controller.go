@@ -21,6 +21,8 @@ type Controller struct {
 	translatorList []TextTranslator
 }
 
+var _ translator.TranslatorServer = (*Controller)(nil)
+
 // NewController creates new struct.
 func NewController() (*Controller, error) {
 	var (
@@ -129,7 +131,7 @@ func (c *Controller) Translate(ctx context.Context, r *translator.TranslateReque
 	ch := make(chan *TranslateParallelResult)
 	c.TranslateParallel(ctx, ch, r)
 
-	// Wait for the API response.
+	// Wait for API response.
 	for c := range ch {
 		if c.err != nil {
 			return nil, fmt.Errorf("translation error: %s, %w", c.serviceType, c.err)

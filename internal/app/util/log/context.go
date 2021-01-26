@@ -19,8 +19,8 @@ func WithLogContextValue(ctx context.Context, requestID string) context.Context 
 	})
 }
 
-// getRequestID returns request ID from ctx.
-func getRequestID(ctx context.Context) string {
+// GetRequestID returns request ID from ctx.
+func GetRequestID(ctx context.Context) string {
 	if cv, ok := ctx.Value(ContextKey{}).(*ContextValue); ok {
 		return cv.requestID
 	}
