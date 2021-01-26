@@ -4,29 +4,38 @@ import (
 	"fmt"
 
 	"context"
-	"os"
-
 	translatorapp "api/internal/app/controller/translator"
 
-	translate "cloud.google.com/go/translate/apiv3"
-	"google.golang.org/api/option"
 	translatepb "google.golang.org/genproto/googleapis/cloud/translate/v3"
+	"api/internal/app/util/config"
+	"api/internal/app/util/di"
+	"google.golang.org/api/option"
 )
 
 // TranslationAPI serves Google Translate API handlers.
 type TranslationAPI struct {
+	projectID string
+	apiKey string
 }
 
 var _ translatorapp.TextTranslator = (*TranslationAPI)(nil)
 
 // NewTranslationAPI creates new struct.
 func NewTranslationAPI() (*TranslationAPI, error) {
-	for _, v := range []string{"GOOGLE_PROJECT_ID", "GOOGLE_API_KEY"} {
-		if os.Getenv(v) == "" {
-			return nil, fmt.Errorf(`environment error: %s`, v)
-		}
-	}
+	var err error
+
 	a := &TranslationAPI{}
+
+	a.projectID, err = config.Get("GOOGLE_PROJECT_ID")
+	if a.projectID == "" || err != nil {
+		return nil, fmt.Errorf("config error name=GOOGLE_PROJECT_ID: %w", err)
+	}
+
+	a.apiKey, err = config.Get("GOOGLE_API_KEY")
+	if a.apiKey == "" || err != nil {
+		return nil, fmt.Errorf("config error name=GOOGLE_API_KEY: %w", err)
+	}
+
 	return a, nil
 }
 
@@ -62,6 +71,10 @@ func translateRequest(projectID string, text string, srcLang, targetLang transla
 		return nil, fmt.Errorf("language code error: %w", err)
 	}
 
+	if text == "" {
+		return nil, fmt.Errorf("text empty error")
+	}
+
 	req := &translatepb.TranslateTextRequest{
 		Parent:             fmt.Sprintf("projects/%s/locations/global", projectID),
 		SourceLanguageCode: sourceCode,
@@ -74,18 +87,25 @@ func translateRequest(projectID string, text string, srcLang, targetLang transla
 }
 
 // Translate returns translated text with Google Translate API.
-func (a TranslationAPI) Translate(ctx context.Context, text string, srcLang translatorapp.LanguageType, targetLang translatorapp.LanguageType) (*translatorapp.Result, error) {
-
-	apiReq, err := translateRequest(os.Getenv("GOOGLE_PROJECT_ID"), text, srcLang, targetLang)
+func (a *TranslationAPI) Translate(ctx context.Context, text string, srcLang translatorapp.LanguageType, targetLang translatorapp.LanguageType) (*translatorapp.Result, error) {
+	apiReq, err := translateRequest(a.projectID, text, srcLang, targetLang)
 	if err != nil {
 		return nil, fmt.Errorf("request creation error: %w", err)
 	}
 
 	// Ref: https://cloud.google.com/translate/docs/reference/rpc/google.cloud.translation.v3#google.cloud.translation.v3.TranslationService
-	client, err := translate.NewTranslationClient(ctx, option.WithCredentialsJSON([]byte(os.Getenv("GOOGLE_API_KEY"))))
+	//client, err := translate.NewTranslationClient(ctx, option.WithCredentialsJSON([]byte(a.apiKey)))
+	//if err != nil {
+	//	return nil, fmt.Errorf("api initialize error: %w", err)
+	//}
+	//defer client.Close()
+
+	clientInf, err := di.Get("translate.NewTranslationClient", ctx, option.WithCredentialsJSON([]byte(a.apiKey)))
 	if err != nil {
 		return nil, fmt.Errorf("api initialize error: %w", err)
 	}
+
+	client := clientInf.(ClientWrapper)
 	defer client.Close()
 
 	// Call Google Translate API

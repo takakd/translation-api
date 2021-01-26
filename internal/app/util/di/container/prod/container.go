@@ -7,6 +7,9 @@ import (
 	"api/internal/app/driver/config"
 	"fmt"
 	"api/internal/app/driver/log"
+	"cloud.google.com/go/translate/apiv3"
+	"google.golang.org/api/option"
+	"context"
 )
 
 // Container implements DI.
@@ -41,6 +44,26 @@ func (d *Container) Get(name string, args ...interface{}) (interface{}, error) {
 
 	} else if name == "log.logger" {
 		c = log.NewStdoutLogger()
+
+	} else if name == "translate.NewTranslationClient" {
+		if len(args) < 2 {
+			return nil, fmt.Errorf("argument error: %v", args)
+		}
+
+		ctx, ok := args[0].(context.Context)
+		if !ok {
+			return nil, fmt.Errorf("argument error: 1:ctx")
+		}
+		apiKey := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("argument error: 2:apiKey")
+		}
+
+		// Ref: https://cloud.google.com/translate/docs/reference/rpc/google.cloud.translation.v3#google.cloud.translation.v3.TranslationService
+		c, err = translate.NewTranslationClient(ctx, option.WithCredentialsJSON([]byte(apiKey)))
+		if err != nil {
+			err = fmt.Errorf("api initialize error: %w", err)
+		}
 	}
 
 	return c, err
