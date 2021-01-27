@@ -19,13 +19,13 @@ var _ translator.TextTranslator = (*TranslationAPI)(nil)
 
 // NewTranslationAPI creates new struct.
 func NewTranslationAPI() (*TranslationAPI, error) {
-    // Check to exist environment variables because AWS SDK reads credentials through environment variables.
 	for _, v := range []string{"AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"} {
 		if os.Getenv(v) == "" {
 			return nil, fmt.Errorf(`environment error: %s`, v)
 		}
 	}
-	return &TranslationAPI{}, nil
+	a := &TranslationAPI{}
+	return a, nil
 }
 
 // Returns language code of AWS Translate API.

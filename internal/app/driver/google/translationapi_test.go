@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/golang/mock/gomock"
 	"api/internal/app/util/config"
-	"gobotskelton.org/appgopath/src/github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"api/internal/app/util/di"
+	"errors"
 )
 
 func TestNewTranslationAPI(t *testing.T) {
@@ -34,8 +34,8 @@ func TestNewTranslationAPI(t *testing.T) {
 			defer ctrl.Finish()
 
 			mc := config.NewMockConfig(ctrl)
-
 			mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(tt.projectID, tt.err)
+			config.SetConfig(mc)
 
 			if tt.projectID != "" && tt.err == nil {
 				mc.EXPECT().Get("GOOGLE_API_KEY").Return(tt.apiKey, tt.err)
@@ -98,7 +98,7 @@ func TestTranslateRequest(t *testing.T) {
 		srcLang := translatorapp.JP
 		targetLang := translatorapp.EN
 		want := &translatepb.TranslateTextRequest{
-			Parent:             fmt.Sprintf("project/%s/locations/global", projectID),
+			Parent:             fmt.Sprintf("projects/%s/locations/global", projectID),
 			SourceLanguageCode: "ja",
 			TargetLanguageCode: "en",
 			MimeType:           "text/plain",
@@ -119,6 +119,7 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		mc := config.NewMockConfig(ctrl)
 		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return("id", nil)
 		mc.EXPECT().Get("GOOGLE_API_KEY").Return("key", nil)
+		config.SetConfig(mc)
 
 		s, err := NewTranslationAPI()
 		require.NoError(t, err)
@@ -135,10 +136,10 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		mc := config.NewMockConfig(ctrl)
 		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return("id", nil)
 		mc.EXPECT().Get("GOOGLE_API_KEY").Return("key", nil)
+		config.SetConfig(mc)
 
 		md := di.NewMockDI(ctrl)
 		md.EXPECT().Get("translate.NewTranslationClient", gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-
 		di.SetDi(md)
 
 		s, err := NewTranslationAPI()
@@ -157,23 +158,34 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		text := "text"
 		srcLang := translatorapp.JP
 		targetLang := translatorapp.EN
+		projectID := "id"
+
+        req := &translatepb.TranslateTextRequest{
+            Parent:             fmt.Sprintf("projects/%s/locations/global", projectID),
+            SourceLanguageCode: "ja",
+            TargetLanguageCode: "en",
+            MimeType:           "text/plain",
+            Contents:           []string{text},
+        }
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return("id", nil)
+		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(projectID, nil)
 		mc.EXPECT().Get("GOOGLE_API_KEY").Return("key", nil)
+		config.SetConfig(mc)
 
 		mt := NewMockClientWrapper(ctrl)
-		mt.EXPECT().TranslateText(ctx, text, srcLang, targetLang).Return(nil, errors.New("error"))
+		mt.EXPECT().TranslateText(ctx, req).Return(nil, errors.New("error"))
+		mt.EXPECT().Close()
 
 		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("translate.NewTranslationClient", gomock.Any(), gomock.Any()).Return(mt, nil)
+		md.EXPECT().Get("translate.NewTranslationClient", gomock.Any()).Return(mt, nil)
 
 		di.SetDi(md)
 
 		s, err := NewTranslationAPI()
 		require.NoError(t, err)
 
-		resp, err := s.Translate(context.TODO(), text, srcLang, targetLang)
+		resp, err := s.Translate(ctx, text, srcLang, targetLang)
 		assert.Nil(t, resp)
 		assert.Error(t, err)
 	})
@@ -186,6 +198,15 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		text := "text"
 		srcLang := translatorapp.JP
 		targetLang := translatorapp.EN
+		projectID := "id"
+
+        req := &translatepb.TranslateTextRequest{
+            Parent:             fmt.Sprintf("projects/%s/locations/global", projectID),
+            SourceLanguageCode: "ja",
+            TargetLanguageCode: "en",
+            MimeType:           "text/plain",
+            Contents:           []string{text},
+        }
 
 		clientResp := &translatepb.TranslateTextResponse{
 			Translations: []*translatepb.Translation{
@@ -201,11 +222,13 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		}
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return("id", nil)
+		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(projectID, nil)
 		mc.EXPECT().Get("GOOGLE_API_KEY").Return("key", nil)
+		config.SetConfig(mc)
 
 		mt := NewMockClientWrapper(ctrl)
-		mt.EXPECT().TranslateText(ctx, text, srcLang, targetLang).Return(clientResp, nil)
+		mt.EXPECT().TranslateText(ctx, req).Return(clientResp, nil)
+		mt.EXPECT().Close()
 
 		md := di.NewMockDI(ctrl)
 		md.EXPECT().Get("translate.NewTranslationClient", gomock.Any(), gomock.Any()).Return(mt, nil)
@@ -215,7 +238,7 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		s, err := NewTranslationAPI()
 		require.NoError(t, err)
 
-		got, err := s.Translate(context.TODO(), text, srcLang, targetLang)
+		got, err := s.Translate(ctx, text, srcLang, targetLang)
 		assert.NoError(t, err)
 		assert.Equal(t, wantResp, got)
 	})

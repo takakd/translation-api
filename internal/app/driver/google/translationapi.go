@@ -93,13 +93,6 @@ func (a *TranslationAPI) Translate(ctx context.Context, text string, srcLang tra
 		return nil, fmt.Errorf("request creation error: %w", err)
 	}
 
-	// Ref: https://cloud.google.com/translate/docs/reference/rpc/google.cloud.translation.v3#google.cloud.translation.v3.TranslationService
-	//client, err := translate.NewTranslationClient(ctx, option.WithCredentialsJSON([]byte(a.apiKey)))
-	//if err != nil {
-	//	return nil, fmt.Errorf("api initialize error: %w", err)
-	//}
-	//defer client.Close()
-
 	clientInf, err := di.Get("translate.NewTranslationClient", ctx, option.WithCredentialsJSON([]byte(a.apiKey)))
 	if err != nil {
 		return nil, fmt.Errorf("api initialize error: %w", err)

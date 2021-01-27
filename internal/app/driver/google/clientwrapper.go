@@ -7,6 +7,7 @@ import (
 )
 
 // ClientWrapper wraps Google Translation gRPC interface for Unit test.
+//    Ref: https://cloud.google.com/translate/docs/reference/rpc/google.cloud.translation.v3#google.cloud.translation.v3.TranslationService
 type ClientWrapper interface {
 	// https://pkg.go.dev/cloud.google.com/go/translate/apiv3#TranslationClient.TranslateText
 	TranslateText(ctx context.Context, req *translatepb.TranslateTextRequest, opts ...gax.CallOption) (*translatepb.TranslateTextResponse, error)
