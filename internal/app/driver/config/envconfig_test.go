@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewEnvConfig(t *testing.T) {
@@ -32,9 +33,9 @@ func TestEnvConfig_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, filePath, _, _ := runtime.Caller(0)
 			// e.g. $(pwd)/testdata/.env.test
-			envPath := filepath.Join(filepath.Dir(filePath), "../testdata/", tt.env)
+			envPath := filepath.Join(filepath.Dir(filePath), "./testdata/", tt.env)
 			config, err := NewEnvConfig(envPath)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			got, err := config.Get(tt.key)
 			assert.NoError(t, err)
@@ -48,9 +49,9 @@ func TestEnvConfig_Get(t *testing.T) {
 		os.Setenv("NAME3", want)
 
 		_, filePath, _, _ := runtime.Caller(0)
-		envPath := filepath.Join(filepath.Dir(filePath), "../testdata/.env.test")
+		envPath := filepath.Join(filepath.Dir(filePath), "./testdata/.env.test")
 		config, err := NewEnvConfig(envPath)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		got, err := config.Get("NAME3")
 		assert.NoError(t, err)
@@ -59,9 +60,9 @@ func TestEnvConfig_Get(t *testing.T) {
 
 	t.Run("overwrite", func(t *testing.T) {
 		_, filePath, _, _ := runtime.Caller(0)
-		envPath := filepath.Join(filepath.Dir(filePath), "../testdata/.env.test")
+		envPath := filepath.Join(filepath.Dir(filePath), "./testdata/.env.test")
 		config, err := NewEnvConfig(envPath)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		want := "override"
 		os.Setenv("NAME1", want)

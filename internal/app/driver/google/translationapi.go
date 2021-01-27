@@ -3,19 +3,20 @@ package google
 import (
 	"fmt"
 
-	"context"
 	translatorapp "api/internal/app/controller/translator"
+	"context"
 
-	translatepb "google.golang.org/genproto/googleapis/cloud/translate/v3"
 	"api/internal/app/util/config"
 	"api/internal/app/util/di"
+
 	"google.golang.org/api/option"
+	translatepb "google.golang.org/genproto/googleapis/cloud/translate/v3"
 )
 
 // TranslationAPI serves Google Translate API handlers.
 type TranslationAPI struct {
 	projectID string
-	apiKey string
+	apiKey    string
 }
 
 var _ translatorapp.TextTranslator = (*TranslationAPI)(nil)
@@ -61,6 +62,7 @@ func languageCode(lang translatorapp.LanguageType) (string, error) {
 
 // Returns TranslateTextRequest with Google API projectID.
 func translateRequest(projectID string, text string, srcLang, targetLang translatorapp.LanguageType) (*translatepb.TranslateTextRequest, error) {
+
 	sourceCode, err := languageCode(srcLang)
 	if err != nil {
 		return nil, fmt.Errorf("language code error: %w", err)

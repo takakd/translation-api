@@ -1,13 +1,14 @@
 package aws
 
 import (
+	"api/internal/app/controller/translator"
 	"context"
 	"fmt"
-	"os"
 
-	"api/internal/app/controller/translator"
+	"api/internal/app/util/config"
+	"api/internal/app/util/di"
+	"errors"
 
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/translate"
 )
 
@@ -19,18 +20,17 @@ var _ translator.TextTranslator = (*TranslationAPI)(nil)
 
 // NewTranslationAPI creates new struct.
 func NewTranslationAPI() (*TranslationAPI, error) {
-    // Check to exist environment variables because AWS SDK reads credentials through environment variables.
+	// Check to exist environment variables because AWS SDK reads credentials through environment variables.
 	for _, v := range []string{"AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"} {
-		if os.Getenv(v) == "" {
-			return nil, fmt.Errorf(`environment error: %s`, v)
+		if cv, err := config.Get(v); cv == "" || err != nil {
+			return nil, fmt.Errorf(`config error name=%s: %w`, v, err)
 		}
 	}
 	return &TranslationAPI{}, nil
 }
 
 // Returns language code of AWS Translate API.
-// Ref:
-// 		https://docs.aws.amazon.com/translate/latest/dg/what-is.html#what-is-languages
+// Ref: https://docs.aws.amazon.com/translate/latest/dg/what-is.html#what-is-languages
 func languageCode(lang translator.LanguageType) (string, error) {
 	code := ""
 	switch lang {
@@ -57,6 +57,10 @@ func textInput(text string, srcLang, targetLang translator.LanguageType) (*trans
 		return nil, fmt.Errorf("language code error: %w", err)
 	}
 
+	if text == "" {
+		return nil, errors.New("text empty error")
+	}
+
 	input := &translate.TextInput{
 		Text:               &text,
 		SourceLanguageCode: &sourceCode,
@@ -73,16 +77,15 @@ func (a *TranslationAPI) Translate(ctx context.Context, text string, srcLang tra
 		return nil, err
 	}
 
-	// Ref: https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
-	appSession, err := session.NewSession()
+	svcInf, err := di.Get("aws.Translate")
 	if err != nil {
-		return nil, fmt.Errorf("aws session error: %w", err)
+		return nil, fmt.Errorf("translate initialize error: %w", err)
 	}
 
-	svc := translate.New(appSession)
+	svc := svcInf.(TranslateWrapper)
 
 	// Call AWS Translate API.
-	svcOutput, err := svc.Text(svcInput)
+	svcOutput, err := svc.TextWithContext(ctx, svcInput)
 	if err != nil {
 		return nil, fmt.Errorf("translate error: %w", err)
 	}

@@ -70,8 +70,6 @@ proxy_envoy_down() {
 }
 
 cmd_test() {
-    docker_run
-
     cd ${SCRIPT_DIR}/..
 
     # @see https://stackoverflow.com/questions/16353016/how-to-go-test-all-tests-in-my-project/35852900#35852900
@@ -79,8 +77,6 @@ cmd_test() {
     #go test -v -cover "${ARGS}" ./...
     # OK
     sh -c "go $(echo ${ARGV[@]})"
-
-    docker_cleanup
 }
 
 grpc() {

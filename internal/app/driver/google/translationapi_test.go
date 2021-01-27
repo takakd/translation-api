@@ -3,17 +3,18 @@ package google
 import (
 	"fmt"
 
-	"context"
 	translatorapp "api/internal/app/controller/translator"
+	"context"
 
-	translatepb "google.golang.org/genproto/googleapis/cloud/translate/v3"
-	"testing"
-	"github.com/stretchr/testify/assert"
-	"github.com/golang/mock/gomock"
 	"api/internal/app/util/config"
-	"github.com/stretchr/testify/require"
 	"api/internal/app/util/di"
 	"errors"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	translatepb "google.golang.org/genproto/googleapis/cloud/translate/v3"
 )
 
 func TestNewTranslationAPI(t *testing.T) {
@@ -82,7 +83,7 @@ func TestTranslateRequest(t *testing.T) {
 	}{
 		{name: "src error", srcLang: translatorapp.LanguageType(""), targetLang: translatorapp.JP, text: "text"},
 		{name: "target error", srcLang: translatorapp.JP, targetLang: translatorapp.LanguageType(""), text: "text"},
-		{name: "target error", srcLang: translatorapp.JP, targetLang: translatorapp.EN, text: ""},
+		{name: "text error", srcLang: translatorapp.JP, targetLang: translatorapp.EN, text: ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -160,13 +161,13 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		targetLang := translatorapp.EN
 		projectID := "id"
 
-        req := &translatepb.TranslateTextRequest{
-            Parent:             fmt.Sprintf("projects/%s/locations/global", projectID),
-            SourceLanguageCode: "ja",
-            TargetLanguageCode: "en",
-            MimeType:           "text/plain",
-            Contents:           []string{text},
-        }
+		req := &translatepb.TranslateTextRequest{
+			Parent:             fmt.Sprintf("projects/%s/locations/global", projectID),
+			SourceLanguageCode: "ja",
+			TargetLanguageCode: "en",
+			MimeType:           "text/plain",
+			Contents:           []string{text},
+		}
 
 		mc := config.NewMockConfig(ctrl)
 		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(projectID, nil)
@@ -200,13 +201,13 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		targetLang := translatorapp.EN
 		projectID := "id"
 
-        req := &translatepb.TranslateTextRequest{
-            Parent:             fmt.Sprintf("projects/%s/locations/global", projectID),
-            SourceLanguageCode: "ja",
-            TargetLanguageCode: "en",
-            MimeType:           "text/plain",
-            Contents:           []string{text},
-        }
+		req := &translatepb.TranslateTextRequest{
+			Parent:             fmt.Sprintf("projects/%s/locations/global", projectID),
+			SourceLanguageCode: "ja",
+			TargetLanguageCode: "en",
+			MimeType:           "text/plain",
+			Contents:           []string{text},
+		}
 
 		clientResp := &translatepb.TranslateTextResponse{
 			Translations: []*translatepb.Translation{

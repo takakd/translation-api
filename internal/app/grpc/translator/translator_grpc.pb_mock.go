@@ -6,9 +6,10 @@ package translator
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
 
 // MockTranslatorClient is a mock of TranslatorClient interface

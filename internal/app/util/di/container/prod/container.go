@@ -2,14 +2,12 @@ package prod
 
 import (
 	"api/internal/app/driver/aws"
-	"api/internal/app/driver/google"
-	"api/internal/app/util/di"
 	"api/internal/app/driver/config"
-	"fmt"
+	"api/internal/app/driver/google"
 	"api/internal/app/driver/log"
-	"cloud.google.com/go/translate/apiv3"
-	"google.golang.org/api/option"
+	"api/internal/app/util/di"
 	"context"
+	"fmt"
 )
 
 // Container implements DI.
@@ -45,7 +43,7 @@ func (d *Container) Get(name string, args ...interface{}) (interface{}, error) {
 	} else if name == "log.logger" {
 		c = log.NewStdoutLogger()
 
-	} else if name == "translate.NewTranslationClient" {
+	} else if name == "google.ClientWrapper" {
 		if len(args) < 2 {
 			return nil, fmt.Errorf("argument error: %v", args)
 		}
@@ -59,11 +57,13 @@ func (d *Container) Get(name string, args ...interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("argument error: 2:apiKey")
 		}
 
-		// Ref: https://cloud.google.com/translate/docs/reference/rpc/google.cloud.translation.v3#google.cloud.translation.v3.TranslationService
-		c, err = translate.NewTranslationClient(ctx, option.WithCredentialsJSON([]byte(apiKey)))
+		c, err = google.NewClient(ctx, apiKey)
 		if err != nil {
-			err = fmt.Errorf("api initialize error: %w", err)
+			err = fmt.Errorf("google.NewClient creation error: %w", err)
 		}
+
+	} else if name == "aws.TranslateWrapper" {
+		c, err = aws.NewTranslate()
 	}
 
 	return c, err

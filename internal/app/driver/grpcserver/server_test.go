@@ -5,14 +5,15 @@ import (
 	"os"
 	"testing"
 
+	"api/internal/app/grpc/translator"
+	"api/internal/app/util/config"
+	"api/internal/app/util/log"
+	"errors"
+	"sync"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"api/internal/app/util/config"
-	"errors"
-	"api/internal/app/util/log"
-	"api/internal/app/grpc/translator"
-	"time"
-	"sync"
 )
 
 func TestNewServer(t *testing.T) {

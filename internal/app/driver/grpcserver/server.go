@@ -12,8 +12,9 @@ import (
 
 	"api/internal/app/util/di"
 
-	"google.golang.org/grpc"
 	"api/internal/app/util/config"
+
+	"google.golang.org/grpc"
 )
 
 const (

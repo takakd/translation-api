@@ -1,10 +1,10 @@
 package config_test
 
 import (
-	"os"
-	"api/internal/app/util/config"
 	config2 "api/internal/app/driver/config"
+	"api/internal/app/util/config"
 	"fmt"
+	"os"
 )
 
 func ExampleGet() {

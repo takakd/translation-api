@@ -6,10 +6,11 @@ package google
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	gax "github.com/googleapis/gax-go/v2"
 	translate "google.golang.org/genproto/googleapis/cloud/translate/v3"
-	reflect "reflect"
 )
 
 // MockClientWrapper is a mock of ClientWrapper interface

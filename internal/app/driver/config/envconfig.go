@@ -28,9 +28,5 @@ func NewEnvConfig(filepathList ...string) (*EnvConfig, error) {
 
 // Get returns value corresponding name.
 func (e EnvConfig) Get(name string) (string, error) {
-	v := os.Getenv(strings.ToUpper(name))
-	if v == "" {
-		return "", fmt.Errorf("config error %s does not exists", name)
-	}
-	return v, nil
+	return os.Getenv(strings.ToUpper(name)), nil
 }

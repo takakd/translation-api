@@ -84,8 +84,12 @@ func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *Translate
 			result := &TranslateParallelResult{}
 
 			// Call API
-			if apiResult, err := t.Translate(ctx, r.GetText(), toTranslatorLang(r.GetSrcLang()), toTranslatorLang(r.GetTargetLang())); err != nil {
-				result.err = err
+			if apiResult, err := t.Translate(ctx, r.GetText(), toTranslatorLang(r.GetSrcLang()), toTranslatorLang(r.GetTargetLang())); apiResult == nil || err != nil {
+				if err != nil {
+					result.err = err
+				} else {
+					result.err = fmt.Errorf("result is empty %v", t)
+				}
 				ch <- result
 			} else {
 				result.translated = &translator.TranslatedText{
@@ -132,12 +136,17 @@ func (c *Controller) Translate(ctx context.Context, r *translator.TranslateReque
 	c.TranslateParallel(ctx, ch, r)
 
 	// Wait for API response.
+	var err error
 	for c := range ch {
 		if c.err != nil {
-			return nil, fmt.Errorf("translation error: %s, %w", c.serviceType, c.err)
+			err = fmt.Errorf("translation error: %s, %w", c.serviceType, c.err)
+			continue
 		}
 		resp.TranslatedTextList[string(c.serviceType)] = c.translated
 	}
 
+	if err != nil {
+		return nil, err
+	}
 	return resp, nil
 }
