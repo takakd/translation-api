@@ -1,13 +1,11 @@
 package grpcserver
 
 import (
-	"api/internal/app/util/di"
-	"os"
 	"testing"
 
 	"api/internal/app/grpc/translator"
 	"api/internal/app/util/config"
-	"api/internal/app/util/log"
+	"api/internal/app/util/di"
 	"errors"
 	"sync"
 	"time"
@@ -17,108 +15,15 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	tt := NewServer()
-	assert.Equal(t, ":"+DefaultPort, tt.port)
-}
-
-func TestServer_setupConfig(t *testing.T) {
-	tests := []struct {
-		name string
-		env  string
-		err  error
-	}{
-		{name: "env", env: "test"},
-		{name: "env empty", env: ""},
-		{name: "error", env: "", err: errors.New("config error")},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			// Test value after setupConfig
-			cnfName := "did_set"
-			cnfValue := "ok"
-
-			mc := config.NewMockConfig(ctrl)
-			if tt.err == nil {
-				mc.EXPECT().Get(cnfName).Return(cnfValue, nil)
-			}
-
-			md := di.NewMockDI(ctrl)
-			if tt.env == "" {
-				md.EXPECT().Get("config.config").Return(mc, tt.err)
-			} else {
-				envFilename := ".env." + tt.env
-				md.EXPECT().Get("config.config", []string{envFilename}).Return(mc, tt.err)
-			}
-
-			di.SetDi(md)
-			os.Setenv("DOT_ENV", tt.env)
-
-			s := NewServer()
-			err := s.setupConfig()
-
-			if tt.err != nil {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-
-				// Check config
-				v, _ := config.Get(cnfName)
-				assert.Equal(t, cnfValue, v)
-			}
-		})
-	}
-}
-
-func TestServer_setupLogger(t *testing.T) {
-	tests := []struct {
-		name       string
-		levelLabel string
-		level      log.Level
-		err        error
-	}{
-		{name: "debug", levelLabel: "", level: log.LevelDebug},
-		{name: "error", levelLabel: "ERROR", level: log.LevelError},
-		{name: "info", levelLabel: "INFO", level: log.LevelInfo},
-		{name: "err", levelLabel: "DEBUG", level: log.LevelDebug, err: errors.New("log error")},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			ml := log.NewMockLogger(ctrl)
-			if tt.err == nil {
-				ml.EXPECT().SetLevel(tt.level)
-			}
-
-			md := di.NewMockDI(ctrl)
-			md.EXPECT().Get("log.logger").Return(ml, tt.err)
-
-			di.SetDi(md)
-			os.Setenv("DEBUG_LEVEL", tt.levelLabel)
-
-			s := NewServer()
-			err := s.setupLogger()
-			if tt.err != nil {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestServer_Setup(t *testing.T) {
 	tests := []struct {
 		name     string
 		port     string
 		wantPort string
+		portErr  error
 	}{
-		{name: "port", port: "50011", wantPort: ":50011"},
-		{name: "default port", wantPort: ":" + DefaultPort},
+		{name: "ok", port: "50123", wantPort: "50123"},
+		{name: "default", port: "", wantPort: DefaultPort},
+		{name: "error", port: "50123", portErr: errors.New("error")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -126,56 +31,30 @@ func TestServer_Setup(t *testing.T) {
 			defer ctrl.Finish()
 
 			mc := config.NewMockConfig(ctrl)
+			mc.EXPECT().Get("GRPC_PORT").Return(tt.port, tt.portErr)
+			config.SetConfig(mc)
 
-			ml := log.NewMockLogger(ctrl)
-			ml.EXPECT().SetLevel(gomock.Any())
+			s, err := NewServer()
 
-			md := di.NewMockDI(ctrl)
-			md.EXPECT().Get("config.config").Return(mc, nil)
-			md.EXPECT().Get("log.logger").Return(ml, nil)
-
-			di.SetDi(md)
-			os.Setenv("GRPC_PORT", tt.port)
-
-			s := NewServer()
-			err := s.Setup()
-			assert.NoError(t, err)
-			assert.Equal(t, tt.wantPort, s.port)
+			if tt.portErr != nil {
+				assert.Error(t, err)
+			} else {
+				assert.Equal(t, ":"+tt.wantPort, s.port)
+			}
 		})
 	}
-
-	t.Run("config error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("config.config").Return(nil, errors.New("log error"))
-
-		di.SetDi(md)
-
-		s := NewServer()
-		err := s.Setup()
-		assert.Error(t, err)
-	})
-
-	t.Run("log error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("config.config").Return(nil, errors.New("log error"))
-
-		di.SetDi(md)
-
-		s := NewServer()
-		err := s.Setup()
-		assert.Error(t, err)
-	})
 }
 
 func TestServer_Run(t *testing.T) {
 	t.Run("tcp error", func(t *testing.T) {
-		s := NewServer()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mc := config.NewMockConfig(ctrl)
+		mc.EXPECT().Get("GRPC_PORT").Return("", nil)
+		config.SetConfig(mc)
+
+		s, _ := NewServer()
 		s.port = "invalid port"
 		err := s.Run()
 		assert.Error(t, err)
@@ -186,10 +65,14 @@ func TestServer_Run(t *testing.T) {
 		defer ctrl.Finish()
 
 		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("translator.NewController").Return(nil, errors.New("controller error"))
+		md.EXPECT().Get("controller.translator.Controller").Return(nil, errors.New("controller error"))
 		di.SetDi(md)
 
-		s := NewServer()
+		mc := config.NewMockConfig(ctrl)
+		mc.EXPECT().Get("GRPC_PORT").Return("", nil)
+		config.SetConfig(mc)
+
+		s, _ := NewServer()
 		err := s.Run()
 		assert.Error(t, err)
 	})
@@ -207,12 +90,16 @@ func TestServer_Run(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
 
-				mc := translator.NewMockTranslatorServer(ctrl)
+				mt := translator.NewMockTranslatorServer(ctrl)
 				md := di.NewMockDI(ctrl)
-				md.EXPECT().Get("translator.NewController").Return(mc, nil)
+				md.EXPECT().Get("controller.translator.Controller").Return(mt, nil)
 				di.SetDi(md)
 
-				s := NewServer()
+				mc := config.NewMockConfig(ctrl)
+				mc.EXPECT().Get("GRPC_PORT").Return("", nil)
+				config.SetConfig(mc)
+
+				s, _ := NewServer()
 
 				// Run server in Go routine and force to stop.
 				var wg sync.WaitGroup

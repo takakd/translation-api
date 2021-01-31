@@ -5,10 +5,7 @@ import (
 	"net"
 
 	pb "api/internal/app/grpc/translator"
-	"api/internal/app/util/log"
 	"fmt"
-
-	"os"
 
 	"api/internal/app/util/di"
 
@@ -31,75 +28,19 @@ type Server struct {
 }
 
 // NewServer creates new struct.
-func NewServer() *Server {
+func NewServer() (*Server, error) {
+	// Set port number.
+	port, err := config.Get("GRPC_PORT")
+	if err != nil {
+		return nil, fmt.Errorf("port error: %w", err)
+	}
+	if port == "" {
+		port = DefaultPort
+	}
+
 	return &Server{
-		port: fmt.Sprintf(":%s", DefaultPort),
-	}
-}
-
-// Setup initialize server.
-func (s *Server) Setup() error {
-	if err := s.setupConfig(); err != nil {
-		return fmt.Errorf("config setup error: %w", err)
-	}
-
-	if err := s.setupLogger(); err != nil {
-		return fmt.Errorf("logger setup error: %w", err)
-	}
-
-	// Set port number
-	var port string
-	if port = os.Getenv("GRPC_PORT"); port != "" {
-		s.port = fmt.Sprintf(":%s", port)
-	}
-
-	return nil
-}
-
-func (s *Server) setupConfig() error {
-	var (
-		err         error
-		envFilename string
-	)
-
-	var cnf interface{}
-	if env := os.Getenv("DOT_ENV"); env != "" {
-		envFilename = ".env." + env
-		//if err := godotenv.Load(dotEnvFilename); err != nil {
-		//	return fmt.Errorf(".env loading error: %w", err)
-		//}
-		//fmt.Printf("%s loaded\n", dotEnvFilename)
-
-		cnf, err = di.Get("config.config", []string{envFilename})
-	} else {
-		cnf, err = di.Get("config.config")
-	}
-	if err != nil {
-		return fmt.Errorf("nil error: config.config: %w", err)
-	}
-
-	config.SetConfig(cnf.(config.Config))
-
-	return nil
-}
-
-func (s *Server) setupLogger() error {
-	logger, err := di.Get("log.logger")
-	if err != nil {
-		return fmt.Errorf("nil error: log.logger")
-	}
-	log.SetLogger(logger.(log.Logger))
-
-	level := log.LevelDebug
-	switch os.Getenv("DEBUG_LEVEL") {
-	case "INFO":
-		level = log.LevelInfo
-	case "ERROR":
-		level = log.LevelError
-	}
-	log.SetLevel(level)
-
-	return nil
+		port: fmt.Sprintf(":%s", port),
+	}, nil
 }
 
 // Run starts grpc server.
@@ -117,7 +58,7 @@ func (s *Server) Run() error {
 	s.gs = grpc.NewServer()
 
 	// Set method handlers.
-	translatorCtrl, err := di.Get("translator.NewController")
+	translatorCtrl, err := di.Get("controller.translator.Controller")
 	if err != nil {
 		return fmt.Errorf("failed to setup api: %v", err)
 	}

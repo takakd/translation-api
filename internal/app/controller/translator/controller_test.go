@@ -44,10 +44,10 @@ func TestNewController(t *testing.T) {
 
 			md := di.NewMockDI(ctrl)
 
-			md.EXPECT().Get("translator.awsTextTranslator").Return(tt.awsTranslator, tt.awsErr)
+			md.EXPECT().Get("driver.aws.TranslationAPI").Return(tt.awsTranslator, tt.awsErr)
 
 			if tt.awsTranslator == tInf && tt.awsErr == nil {
-				md.EXPECT().Get("translator.googleTextTranslator").Return(tt.googleTranslator, tt.googleErr)
+				md.EXPECT().Get("driver.google.TranslationAPI").Return(tt.googleTranslator, tt.googleErr)
 			}
 
 			di.SetDi(md)

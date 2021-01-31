@@ -77,7 +77,7 @@ func (a *TranslationAPI) Translate(ctx context.Context, text string, srcLang tra
 		return nil, err
 	}
 
-	svcInf, err := di.Get("aws.Translate")
+	svcInf, err := di.Get("driver.aws.Translate")
 	if err != nil {
 		return nil, fmt.Errorf("translate initialize error: %w", err)
 	}

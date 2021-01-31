@@ -140,7 +140,7 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		config.SetConfig(mc)
 
 		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("translate.NewTranslationClient", gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+		md.EXPECT().Get("driver.google.Client", gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 		di.SetDi(md)
 
 		s, err := NewTranslationAPI()
@@ -179,7 +179,7 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		mt.EXPECT().Close()
 
 		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("translate.NewTranslationClient", gomock.Any()).Return(mt, nil)
+		md.EXPECT().Get("driver.google.Client", gomock.Any()).Return(mt, nil)
 
 		di.SetDi(md)
 
@@ -232,7 +232,7 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		mt.EXPECT().Close()
 
 		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("translate.NewTranslationClient", gomock.Any(), gomock.Any()).Return(mt, nil)
+		md.EXPECT().Get("driver.google.Client", gomock.Any(), gomock.Any()).Return(mt, nil)
 
 		di.SetDi(md)
 

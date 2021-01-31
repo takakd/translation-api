@@ -26,26 +26,29 @@ var _ translator.TranslatorServer = (*Controller)(nil)
 // NewController creates new struct.
 func NewController() (*Controller, error) {
 	var (
-		tmp interface{}
-		err error
+		tmp  interface{}
+		name string
+		err  error
 	)
 
-	tmp, err = di.Get("translator.awsTextTranslator")
+	name = "driver.aws.TranslationAPI"
+	tmp, err = di.Get(name)
 	if err != nil {
-		return nil, fmt.Errorf("nil error: awsTextTranslator")
+		return nil, fmt.Errorf("nil error: %s", name)
 	}
 	awsTextTranslator, ok := tmp.(TextTranslator)
 	if !ok {
-		return nil, fmt.Errorf("type error: awsTextTranslator")
+		return nil, fmt.Errorf("type error: %s", name)
 	}
 
-	tmp, err = di.Get("translator.googleTextTranslator")
+	name = "driver.google.TranslationAPI"
+	tmp, err = di.Get(name)
 	if err != nil {
-		return nil, fmt.Errorf("nil error: googleTextTranslator")
+		return nil, fmt.Errorf("nil error: %s", name)
 	}
 	googleTextTranslator, ok := tmp.(TextTranslator)
 	if !ok {
-		return nil, fmt.Errorf("type error: googleTextTranslator")
+		return nil, fmt.Errorf("type error: %s", name)
 	}
 
 	c := &Controller{}

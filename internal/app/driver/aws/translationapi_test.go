@@ -146,7 +146,7 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		config.SetConfig(mc)
 
 		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("aws.Translate").Return(nil, errors.New("error"))
+		md.EXPECT().Get("driver.aws.Translate").Return(nil, errors.New("error"))
 		di.SetDi(md)
 
 		s, err := NewTranslationAPI()
@@ -173,7 +173,7 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		ms.EXPECT().TextWithContext(ctx, gomock.Any()).Return(nil, errors.New("error"))
 
 		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("aws.Translate").Return(ms, nil)
+		md.EXPECT().Get("driver.aws.Translate").Return(ms, nil)
 		di.SetDi(md)
 
 		s, err := NewTranslationAPI()
@@ -222,7 +222,7 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		ms.EXPECT().TextWithContext(ctx, input).Return(ret, nil)
 
 		md := di.NewMockDI(ctrl)
-		md.EXPECT().Get("aws.Translate").Return(ms, nil)
+		md.EXPECT().Get("driver.aws.Translate").Return(ms, nil)
 		di.SetDi(md)
 
 		s, err := NewTranslationAPI()

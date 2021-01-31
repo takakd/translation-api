@@ -19,11 +19,13 @@ Example.
 Command:
   build         Build app binary.
   fmt           Format sources.
-  run           Run on local.
+  run           Run envoy and gRPC server on local.
+  run:go        Run gRPC server on local.
+  run:envoy     Run envoy on local.
+  stop:envoy    Stop envoy on local.
   test          Run test on local.
   install       Install dependency modules
-  docker:run    Run docker on local.
-  docker:stop   Stop docker on local.
+  grpc          Generate gRPC codes.
 _EOT_
 exit 1
 }
@@ -47,24 +49,23 @@ run() {
     # Call if it's entered Ctrl+C
     trap proxy_envoy_down SIGINT
 
-    echo Run go cmd.
-    cd "${SCRIPT_DIR}/../cmd/api" || exit
-    #DOT_ENV=local ./api
-    DOT_ENV=local go run ./api.go
+    run_go
 
     proxy_envoy_down
 }
+
 run_go() {
     echo Run go cmd.
     cd "${SCRIPT_DIR}/../cmd/api" || exit
-    #DOT_ENV=local ./api
-    DOT_ENV=local go run ./api.go
+    APP_ENV=local ENV_FILE="${SCRIPT_DIR}/../cmd/api/.env.local" go run ./api.go
 }
+
 proxy_envoy_run() {
     docker-compose -f ${SCRIPT_DIR}/../deployments/envoy/docker-compose.yml up -d
     # wait for starting
     sleep 5
 }
+
 proxy_envoy_down() {
     docker-compose -f ${SCRIPT_DIR}/../deployments/envoy/docker-compose.yml down
 }
@@ -108,10 +109,6 @@ elif [[ $1 = "test" ]]; then
     cmd_test
 elif [[ $1 = "install" ]]; then
     install
-elif [[ $1 = "docker:run" ]]; then
-    docker_run
-elif [[ $1 = "docker:stop" ]]; then
-    docker_cleanup
 elif [[ $1 = "grpc" ]]; then
     grpc
 else

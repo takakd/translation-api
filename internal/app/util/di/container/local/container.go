@@ -1,4 +1,4 @@
-package prod
+package local
 
 import (
 	"api/internal/app/controller/translator"

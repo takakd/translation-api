@@ -9,7 +9,6 @@ import (
 	"api/internal/app/util/config"
 	"api/internal/app/util/di"
 
-	"google.golang.org/api/option"
 	translatepb "google.golang.org/genproto/googleapis/cloud/translate/v3"
 )
 
@@ -95,7 +94,7 @@ func (a *TranslationAPI) Translate(ctx context.Context, text string, srcLang tra
 		return nil, fmt.Errorf("request creation error: %w", err)
 	}
 
-	clientInf, err := di.Get("translate.NewTranslationClient", ctx, option.WithCredentialsJSON([]byte(a.apiKey)))
+	clientInf, err := di.Get("driver.google.Client", ctx, a.apiKey)
 	if err != nil {
 		return nil, fmt.Errorf("api initialize error: %w", err)
 	}
