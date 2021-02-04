@@ -4,12 +4,16 @@ package grpcserver
 import (
 	"net"
 
-	pb "api/internal/app/grpc/translator"
+	pbh "api/internal/app/grpc/health/grpc_health_v1"
+	pbt "api/internal/app/grpc/translator"
 	"fmt"
 
 	"api/internal/app/util/di"
 
 	"api/internal/app/util/config"
+
+	"api/internal/app/util/log"
+	"context"
 
 	"google.golang.org/grpc"
 )
@@ -21,7 +25,8 @@ const (
 
 // Server is used to implement translator.TranslatorServer.
 type Server struct {
-	pb.UnimplementedTranslatorServer
+	pbt.UnimplementedTranslatorServer
+	pbh.UnimplementedHealthServer
 	port string
 	gs   *grpc.Server
 	lis  net.Listener
@@ -58,11 +63,21 @@ func (s *Server) Run() error {
 	s.gs = grpc.NewServer()
 
 	// Set method handlers.
+	//	translator
 	translatorCtrl, err := di.Get("controller.translator.Controller")
 	if err != nil {
-		return fmt.Errorf("failed to setup api: %v", err)
+		return fmt.Errorf("failed to setup translator handler: %v", err)
 	}
-	pb.RegisterTranslatorServer(s.gs, translatorCtrl.(pb.TranslatorServer))
+	pbt.RegisterTranslatorServer(s.gs, translatorCtrl.(pbt.TranslatorServer))
+
+	//	health check
+	healthCheckCtrl, err := di.Get("controller.grpc_health_v1.Controller")
+	if err != nil {
+		return fmt.Errorf("failed to setup grpc_health_v1 handler: %v", err)
+	}
+	pbh.RegisterHealthServer(s.gs, healthCheckCtrl.(pbh.HealthServer))
+
+	log.Info(context.Background(), log.StringValue("server start"))
 
 	// Run.
 	if err := s.gs.Serve(s.lis); err != nil {

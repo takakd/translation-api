@@ -34,21 +34,21 @@ func NewController() (*Controller, error) {
 	name = "driver.aws.TranslationAPI"
 	tmp, err = di.Get(name)
 	if err != nil {
-		return nil, fmt.Errorf("nil error: %s", name)
+		return nil, fmt.Errorf("nil error name=%s: %w", name, err)
 	}
 	awsTextTranslator, ok := tmp.(TextTranslator)
 	if !ok {
-		return nil, fmt.Errorf("type error: %s", name)
+		return nil, fmt.Errorf("type error name=%s: %w", name, err)
 	}
 
 	name = "driver.google.TranslationAPI"
 	tmp, err = di.Get(name)
 	if err != nil {
-		return nil, fmt.Errorf("nil error: %s", name)
+		return nil, fmt.Errorf("nil error name=%s: %w", name, err)
 	}
 	googleTextTranslator, ok := tmp.(TextTranslator)
 	if !ok {
-		return nil, fmt.Errorf("type error: %s", name)
+		return nil, fmt.Errorf("type error name=%s: %w", name, err)
 	}
 
 	c := &Controller{}

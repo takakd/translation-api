@@ -26,6 +26,7 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
+// LangType is the language type, which each message use.
 type LangType int32
 
 const (
@@ -75,7 +76,7 @@ func (LangType) EnumDescriptor() ([]byte, []int) {
 	return file_translator_proto_rawDescGZIP(), []int{0}
 }
 
-// The request message containing the user's name.
+// TranslateRequest message containing text to be translated, source language type and target language type.
 type TranslateRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -139,14 +140,17 @@ func (x *TranslateRequest) GetTargetLang() LangType {
 	return LangType_UNKOWN
 }
 
-// The response message containing the greetings
+// TranslateResponse message containing text to be translated, source language type and translated text.
 type TranslateResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Text               string                     `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
-	SrcLang            LangType                   `protobuf:"varint,2,opt,name=srcLang,proto3,enum=translator.LangType" json:"srcLang,omitempty"`
+	Text    string   `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	SrcLang LangType `protobuf:"varint,2,opt,name=srcLang,proto3,enum=translator.LangType" json:"srcLang,omitempty"`
+	// Translated text by translation service.
+	// The key of map is the translation service name: aws or google.
+	// Ref. https://developers.google.com/protocol-buffers/docs/proto3#maps
 	TranslatedTextList map[string]*TranslatedText `protobuf:"bytes,3,rep,name=translatedTextList,proto3" json:"translatedTextList,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
@@ -203,7 +207,7 @@ func (x *TranslateResponse) GetTranslatedTextList() map[string]*TranslatedText {
 	return nil
 }
 
-// https://developers.google.com/protocol-buffers/docs/proto3#maps
+// TranslatedText containing translated text and target language type.
 type TranslatedText struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

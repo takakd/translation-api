@@ -10,6 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"api/internal/app/grpc/health/grpc_health_v1"
+	"api/internal/app/util/log"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -60,7 +63,7 @@ func TestServer_Run(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("controller error", func(t *testing.T) {
+	t.Run("translator controller error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -77,7 +80,27 @@ func TestServer_Run(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("run", func(t *testing.T) {
+	t.Run("health check controller error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mt := translator.NewMockTranslatorServer(ctrl)
+
+		md := di.NewMockDI(ctrl)
+		md.EXPECT().Get("controller.translator.Controller").Return(mt, nil)
+		md.EXPECT().Get("controller.grpc_health_v1.Controller").Return(nil, errors.New("controller error"))
+		di.SetDi(md)
+
+		mc := config.NewMockConfig(ctrl)
+		mc.EXPECT().Get("GRPC_PORT").Return("", nil)
+		config.SetConfig(mc)
+
+		s, _ := NewServer()
+		err := s.Run()
+		assert.Error(t, err)
+	})
+
+	t.Run("run translator", func(t *testing.T) {
 		tests := []struct {
 			name string
 			err  bool
@@ -91,9 +114,16 @@ func TestServer_Run(t *testing.T) {
 				defer ctrl.Finish()
 
 				mt := translator.NewMockTranslatorServer(ctrl)
+				mh := grpc_health_v1.NewMockHealthServer(ctrl)
+
 				md := di.NewMockDI(ctrl)
 				md.EXPECT().Get("controller.translator.Controller").Return(mt, nil)
+				md.EXPECT().Get("controller.grpc_health_v1.Controller").Return(mh, nil)
 				di.SetDi(md)
+
+				ml := log.NewMockLogger(ctrl)
+				ml.EXPECT().Info(gomock.Any(), log.StringValue("server start"))
+				log.SetLogger(ml)
 
 				mc := config.NewMockConfig(ctrl)
 				mc.EXPECT().Get("GRPC_PORT").Return("", nil)

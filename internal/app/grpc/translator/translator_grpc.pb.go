@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TranslatorClient interface {
-	// Sends a greeting
+	// Translate translates text.
 	Translate(ctx context.Context, in *TranslateRequest, opts ...grpc.CallOption) (*TranslateResponse, error)
 }
 
@@ -43,7 +43,7 @@ func (c *translatorClient) Translate(ctx context.Context, in *TranslateRequest, 
 // All implementations must embed UnimplementedTranslatorServer
 // for forward compatibility
 type TranslatorServer interface {
-	// Sends a greeting
+	// Translate translates text.
 	Translate(context.Context, *TranslateRequest) (*TranslateResponse, error)
 	mustEmbedUnimplementedTranslatorServer()
 }

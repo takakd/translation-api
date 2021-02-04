@@ -1,6 +1,7 @@
 package prod
 
 import (
+	"api/internal/app/controller/grpc_health_v1"
 	"api/internal/app/controller/translator"
 	"api/internal/app/driver/aws"
 	"api/internal/app/driver/config"
@@ -68,6 +69,9 @@ func (d *Container) Get(name string, args ...interface{}) (interface{}, error) {
 
 	} else if name == "controller.translator.Controller" {
 		c, err = translator.NewController()
+
+	} else if name == "controller.grpc_health_v1.Controller" {
+		c, err = grpc_health_v1.NewController()
 	}
 
 	return c, err

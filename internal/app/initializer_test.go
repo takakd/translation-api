@@ -65,7 +65,7 @@ func TestInitConfig(t *testing.T) {
 			if tt.envFile == "" {
 				md.EXPECT().Get("util.config.Config").Return(mc, tt.err)
 			} else {
-				md.EXPECT().Get("util.config.Config", []string{tt.envFile}).Return(mc, tt.err)
+				md.EXPECT().Get("util.config.Config", tt.envFile).Return(mc, tt.err)
 			}
 
 			di.SetDi(md)
