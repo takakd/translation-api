@@ -1,34 +1,20 @@
 .PHONY: run test fmt
 
-run:
-	@echo "==> Starting run on local..."
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' build"
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' run"
-run_envoy:
-	@echo "==> Starting envoy on local..."
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' run:envoy"
-stop_envoy:
-	@echo "==> Stop envoy on local..."
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' stop:envoy"
-run_go:
-	@echo "==> Go start server on local..."
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' run:go"
+build:
+	@echo "==> Building..."
+	@sh -c "'$(CURDIR)/scripts/makefile.sh' build"
 
 test:
 	@echo "==> Testing..."
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' test -v -cover -tags=\'test local\' -count 1 ./..."
+	@sh -c "'$(CURDIR)/scripts/makefile.sh' test -v -cover -tags=\'test local\' -count 1 ./..."
 
 test_light:
 	@echo "==> Testing..."
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' test -tags=\'test local\' -count 1 ./..."
+	@sh -c "'$(CURDIR)/scripts/makefile.sh' test -tags=\'test local\' -count 1 ./..."
 
 fmt:
 	@echo "==> Formatting go sources..."
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' fmt"
-
-grpc:
-	@echo "==> Generate gRPC codes..."
-	@sh -c "sh '$(CURDIR)/scripts/local.sh' grpc"
+	@sh -c "'$(CURDIR)/scripts/makefile.sh' fmt"
 
 # Arguments have priority
 #FOO=hoge

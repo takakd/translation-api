@@ -15,11 +15,14 @@ func main() {
 
 	server, err := grpcserver.NewServer()
 	if err != nil {
-		fmt.Printf("server initialize error: %s", err)
+		fmt.Printf("server initialize error: %s\n", err)
 		os.Exit(1)
 	}
 
-	server.Run()
+	if err := server.Run(); err != nil {
+		fmt.Printf("server error: %s\n", err)
+		os.Exit(1)
+	}
 }
 
 func setup() error {

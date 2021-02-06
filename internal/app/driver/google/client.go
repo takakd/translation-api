@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"api/internal/pkg/util"
+
 	translate "cloud.google.com/go/translate/apiv3"
 	"github.com/googleapis/gax-go/v2"
 	"google.golang.org/api/option"
@@ -19,14 +21,16 @@ type Client struct {
 var _ ClientWrapper = (*Client)(nil)
 
 // NewClient creates new struct.
-func NewClient(ctx context.Context, apiKey string) (*Client, error) {
+func NewClient(ctx context.Context, apiKeyFilePath string) (*Client, error) {
 
-	if apiKey == "" {
-		return nil, errors.New("apiKey empty error")
+	if apiKeyFilePath == "" {
+		return nil, errors.New("key file path empty error")
+	} else if !util.FileExists(apiKeyFilePath) {
+		return nil, fmt.Errorf("key file not exists: path=%s", apiKeyFilePath)
 	}
 
 	// Ref: https://cloud.google.com/translate/docs/reference/rpc/google.cloud.translation.v3#google.cloud.translation.v3.TranslationService
-	client, err := translate.NewTranslationClient(ctx, option.WithCredentialsJSON([]byte(apiKey)))
+	client, err := translate.NewTranslationClient(ctx, option.WithCredentialsFile(apiKeyFilePath))
 	if err != nil {
 		err = fmt.Errorf("api initialize error: %w", err)
 	}

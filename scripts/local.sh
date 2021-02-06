@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Helper scripts for Makefile
+# Helper scripts for developing
 #
 
 SCRIPT_DIR=$(cd $(dirname "$0"); pwd)
@@ -17,30 +17,13 @@ Example.
   $0 build
 
 Command:
-  build         Build app binary.
-  fmt           Format sources.
   run           Run envoy and gRPC server on local.
   run:go        Run gRPC server on local.
   run:envoy     Run envoy on local.
   stop:envoy    Stop envoy on local.
-  test          Run test on local.
-  install       Install dependency modules
   grpc          Generate gRPC codes.
 _EOT_
 exit 1
-}
-
-build() {
-    cd "${SCRIPT_DIR}/../cmd/api" || exit
-    go build -p 2 -v -x api.go
-}
-
-fmt() {
-    go fmt ./...
-    # Ref: https://gist.github.com/bgentry/fd1ffef7dbde01857f66#gistcomment-1618537
-    goimports -w $(find . -type f -name "*.go" -not -path "./vendor/*")
-    golint ./cmd/... ./internal/...
-    go vet ./cmd/... ./internal/...
 }
 
 run() {
@@ -70,34 +53,30 @@ proxy_envoy_down() {
     docker-compose -f ${SCRIPT_DIR}/../deployments/envoy/docker-compose.yml down
 }
 
-cmd_test() {
-    cd ${SCRIPT_DIR}/..
-
-    # @see https://stackoverflow.com/questions/16353016/how-to-go-test-all-tests-in-my-project/35852900#35852900
-    # NG
-    #go test -v -cover "${ARGS}" ./...
-    # OK
-    sh -c "go $(echo ${ARGV[@]})"
-}
-
 grpc() {
-    protoc --go-grpc_out=${SCRIPT_DIR}/../internal/app/grpc/translator --go-grpc_opt=paths=source_relative --proto_path=${SCRIPT_DIR}/../internal/app/grpc/translator --go_out=${SCRIPT_DIR}/../internal/app/grpc/translator --go_opt=paths=source_relative ${SCRIPT_DIR}/../internal/app/grpc/translator/translator.proto
+    # Ref.
+    #   https://grpc.io/docs/languages/go/quickstart/#regenerate-grpc-code
+    #   https://developers.google.com/protocol-buffers/docs/reference/go-generated#invocation
+
+    # Generate Go codes
+    #   translator
+    mkdir -p ${SCRIPT_DIR}/../internal/app/grpc/translator
+    protoc \
+        --proto_path=${SCRIPT_DIR}/../api/grpc/translator \
+        --go-grpc_out=${SCRIPT_DIR}/../internal/app/grpc/translator \
+        --go-grpc_opt=paths=source_relative \
+        --go_out=${SCRIPT_DIR}/../internal/app/grpc/translator \
+        --go_opt=paths=source_relative \
+        ${SCRIPT_DIR}/../api/grpc/translator/translator.proto
+    "${SCRIPT_DIR}/mock.pl" "${SCRIPT_DIR}/../internal/app/grpc/translator/translator_grpc.pb.go"
 }
 
-install() {
-    go env -w GO111MODULE=on
-    go mod vendor -v
-}
 
 if [[ $# -lt 1 ]]; then
     usage
 fi
 
-if [[ $1 = "build" ]]; then
-    build
-elif [[ $1 = "fmt" ]]; then
-    fmt
-elif [[ $1 = "run" ]]; then
+if [[ $1 = "run" ]]; then
     run
 elif [[ $1 = "run:go" ]]; then
     run_go
@@ -105,10 +84,6 @@ elif [[ $1 = "run:envoy" ]]; then
     proxy_envoy_run
 elif [[ $1 = "stop:envoy" ]]; then
     proxy_envoy_down
-elif [[ $1 = "test" ]]; then
-    cmd_test
-elif [[ $1 = "install" ]]; then
-    install
 elif [[ $1 = "grpc" ]]; then
     grpc
 else

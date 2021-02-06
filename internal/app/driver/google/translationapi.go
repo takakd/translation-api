@@ -14,8 +14,8 @@ import (
 
 // TranslationAPI serves Google Translate API handlers.
 type TranslationAPI struct {
-	projectID string
-	apiKey    string
+	projectID      string
+	apiKeyFilePath string
 }
 
 var _ translatorapp.TextTranslator = (*TranslationAPI)(nil)
@@ -31,9 +31,9 @@ func NewTranslationAPI() (*TranslationAPI, error) {
 		return nil, fmt.Errorf("config error name=GOOGLE_PROJECT_ID: %w", err)
 	}
 
-	a.apiKey, err = config.Get("GOOGLE_API_KEY")
-	if a.apiKey == "" || err != nil {
-		return nil, fmt.Errorf("config error name=GOOGLE_API_KEY: %w", err)
+	a.apiKeyFilePath, err = config.Get("GOOGLE_KEY_FILE_PATH")
+	if a.apiKeyFilePath == "" || err != nil {
+		return nil, fmt.Errorf("config error name=GOOGLE_KEY_FILE_PATH: %w", err)
 	}
 
 	return a, nil
@@ -94,7 +94,7 @@ func (a *TranslationAPI) Translate(ctx context.Context, text string, srcLang tra
 		return nil, fmt.Errorf("request creation error: %w", err)
 	}
 
-	clientInf, err := di.Get("driver.google.Client", ctx, a.apiKey)
+	clientInf, err := di.Get("driver.google.Client", ctx, a.apiKeyFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("api initialize error: %w", err)
 	}

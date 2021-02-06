@@ -16,7 +16,7 @@ import (
 func InitDI() error {
 	appEnv := os.Getenv("APP_ENV")
 	if appEnv == "" {
-		return errors.New("appEnv empty error")
+		return errors.New("APP_ENV empty error")
 	}
 
 	var container di.DI
