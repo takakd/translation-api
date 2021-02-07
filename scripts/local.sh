@@ -44,13 +44,13 @@ run_go() {
 }
 
 proxy_envoy_run() {
-    docker-compose -f ${SCRIPT_DIR}/../deployments/envoy/docker-compose.yml up -d
+    docker-compose -f ${SCRIPT_DIR}/../deployments/local/docker-compose.yml up -d
     # wait for starting
     sleep 5
 }
 
 proxy_envoy_down() {
-    docker-compose -f ${SCRIPT_DIR}/../deployments/envoy/docker-compose.yml down
+    docker-compose -f ${SCRIPT_DIR}/../deployments/local/docker-compose.yml down
 }
 
 grpc() {

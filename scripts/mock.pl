@@ -27,7 +27,7 @@ my $pkg = "";
 open(FH, '<', $file) or die $!;
 while(<FH>){
     # Parse package definition line.
-    if ($_ =~ /^package ([a-z]+)$/) {
+    if ($_ =~ /^package ([a-z_0-9]+)$/) {
         $pkg = $1;
         last;
     }
@@ -39,7 +39,7 @@ my $mock_file = $file;
 $mock_file =~ s/.go$/_mock.go/;
 
 # mockgen command.
-my $cmd = "mockgen -source ${file} -destination ${mock_file} -package ${pkg}";
+my $cmd = "mockgen -source=${file} -destination=${mock_file} -package=${pkg}";
 
 # Run command.
 system($cmd);

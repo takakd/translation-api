@@ -25,16 +25,15 @@ if [[ $# -lt 1 || "$1" == "" ]]; then
     usage
 fi
 
-
 # Start to build image
-
 DOCKER_DIR=${SCRIPT_DIR}/../deployments/docker-image
-
-#   API
 DOCKER_API_SRC_DIR=${DOCKER_DIR}/api/src
 
 #   Clean up
 rm -rf "$DOCKER_API_SRC_DIR"
+
+#   Move to git repo-root to get files by ls-files.
+cd ${SCRIPT_DIR}/..
 
 #   Copy codes to Docker working directory
 for file in $(git ls-files | grep -E "(\\.go|Makefile|scripts|go.mod)"); do
