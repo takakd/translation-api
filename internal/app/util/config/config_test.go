@@ -23,11 +23,10 @@ func TestGetConfig(t *testing.T) {
 			defer ctrl.Finish()
 
 			mc := NewMockConfig(ctrl)
-			mc.EXPECT().Get(tt.key).Return(tt.value, nil)
+			mc.EXPECT().Get(tt.key).Return(tt.value)
 			SetConfig(mc)
 
-			got, err := Get(tt.key)
-			assert.NoError(t, err)
+			got := Get(tt.key)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -35,7 +34,7 @@ func TestGetConfig(t *testing.T) {
 
 func TestGetError(t *testing.T) {
 	SetConfig(nil)
-	v, err := Get("test1")
-	assert.Error(t, err)
-	assert.Equal(t, "", v)
+	assert.Panics(t, func() {
+		Get("test1")
+	})
 }

@@ -3,21 +3,20 @@ package grpcserver
 import (
 	"testing"
 
-	"api/internal/app/grpc/translator"
 	"api/internal/app/util/config"
-	"api/internal/app/util/di"
-	"errors"
-	"sync"
-	"time"
-
 	"api/internal/app/util/log"
+	"errors"
 
 	"bytes"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 
+	"api/internal/app/grpc/translator"
+	"api/internal/app/util/di"
 	"context"
+	"sync"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -40,11 +39,9 @@ func TestNewServer(t *testing.T) {
 			name     string
 			port     string
 			wantPort string
-			portErr  error
 		}{
 			{name: "ok", port: "50123", wantPort: "50123"},
 			{name: "default", port: "", wantPort: DefaultPort},
-			{name: "error", port: "50123", portErr: errors.New("error")},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -52,44 +49,35 @@ func TestNewServer(t *testing.T) {
 				defer ctrl.Finish()
 
 				mc := config.NewMockConfig(ctrl)
-				mc.EXPECT().Get("GRPC_PORT").Return(tt.port, tt.portErr)
-				if tt.portErr == nil {
-					mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(testdata.cert, nil)
-					mc.EXPECT().Get("SERVER_KEY_FILE_PATH").Return(testdata.key, nil)
-					mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health", nil)
-				}
-
+				mc.EXPECT().Get("GRPC_PORT").Return(tt.port)
+				mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health")
+				mc.EXPECT().Get("TLS").Return("")
 				config.SetConfig(mc)
 
 				s, err := NewServer()
-
-				if tt.portErr != nil {
-					require.Nil(t, s)
-					assert.Error(t, err)
-				} else {
-					require.NotNil(t, s)
-					assert.Equal(t, tt.wantPort, s.port)
-				}
+				require.NoError(t, err)
+				require.NotNil(t, s)
+				assert.Equal(t, tt.wantPort, s.port)
 			})
 		}
 	})
 
-	t.Run("files", func(t *testing.T) {
+	t.Run("tls", func(t *testing.T) {
 		testErr := errors.New("error")
 
 		tests := []struct {
-			name    string
-			cert    string
-			certErr error
-			key     string
-			keyErr  error
-			err     error
+			name string
+			tls  string
+			cert string
+			key  string
+			err  error
 		}{
-			{name: "ok", cert: testdata.cert, key: testdata.key},
-			{name: "cert empty", cert: "", key: testdata.key, certErr: testErr, err: testErr},
-			{name: "cert not exists", cert: "dummy", key: testdata.key, certErr: testErr, err: testErr},
-			{name: "key empty", cert: testdata.cert, key: "", keyErr: testErr, err: testErr},
-			{name: "key not exists", cert: testdata.cert, key: "dummy", keyErr: testErr, err: testErr},
+			{name: "enabled", tls: "true", cert: testdata.cert, key: testdata.key},
+			{name: "disabled empty", tls: "false", cert: testdata.cert, key: testdata.key},
+			{name: "cert empty", tls: "true", cert: "", key: testdata.key, err: testErr},
+			{name: "cert not exists", tls: "true", cert: "dummy", key: testdata.key, err: testErr},
+			{name: "key empty", tls: "true", cert: testdata.cert, key: "", err: testErr},
+			{name: "key not exists", tls: "true", cert: testdata.cert, key: "dummy", err: testErr},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -97,24 +85,29 @@ func TestNewServer(t *testing.T) {
 				defer ctrl.Finish()
 
 				mc := config.NewMockConfig(ctrl)
-				mc.EXPECT().Get("GRPC_PORT").Return("50051", nil)
-				mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(tt.cert, tt.certErr)
-				if tt.certErr == nil {
-					mc.EXPECT().Get("SERVER_KEY_FILE_PATH").Return(tt.key, tt.keyErr)
-				}
-				if tt.certErr == nil && tt.keyErr == nil {
-					mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("ok", nil)
-				}
+				mc.EXPECT().Get("GRPC_PORT").Return("50051")
+				mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health")
 
+				mc.EXPECT().Get("TLS").Return(tt.tls)
+				if tt.tls == "true" {
+					mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(tt.cert)
+					mc.EXPECT().Get("SERVER_KEY_FILE_PATH").Return(tt.key)
+				}
 				config.SetConfig(mc)
 
 				s, err := NewServer()
-				if tt.err == nil {
-					assert.NotNil(t, s)
-					assert.NoError(t, err)
-				} else {
+				if tt.err != nil {
 					assert.Nil(t, s)
 					assert.Error(t, err)
+				} else {
+					assert.NotNil(t, s)
+					assert.NoError(t, err)
+
+					if tt.tls == "true" {
+						assert.Equal(t, true, s.tlsEnabled)
+					} else {
+						assert.Equal(t, false, s.tlsEnabled)
+					}
 				}
 			})
 		}
@@ -124,23 +117,22 @@ func TestNewServer(t *testing.T) {
 		tests := []struct {
 			name string
 			path string
+			err  error
 		}{
 			{name: "ok", path: "/health"},
-			{name: "health check error"},
+			{name: "empty", path: ""},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
 
-				err := errors.New("config error")
-
 				mc := config.NewMockConfig(ctrl)
-				mc.EXPECT().Get("GRPC_PORT").Return("50051", nil)
-				mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(testdata.cert, nil)
-				mc.EXPECT().Get("SERVER_KEY_FILE_PATH").Return(testdata.key, nil)
-				mc.EXPECT().Get("HEALTH_CHECK_PATH").Return(tt.path, nil)
-
+				mc.EXPECT().Get("GRPC_PORT").Return("50051")
+				mc.EXPECT().Get("HEALTH_CHECK_PATH").Return(tt.path)
+				if tt.path != "" {
+					mc.EXPECT().Get("TLS").Return("false")
+				}
 				config.SetConfig(mc)
 
 				s, err := NewServer()
@@ -158,6 +150,13 @@ func TestNewServer(t *testing.T) {
 
 func TestServer_ServeHTTP(t *testing.T) {
 	t.Run("health check", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		ml := log.NewMockLogger(ctrl)
+		ml.EXPECT().Info(gomock.Any(), gomock.Any())
+		log.SetLogger(ml)
+
 		s := &Server{
 			healthCheckPath: "/health",
 		}
@@ -181,10 +180,9 @@ func TestServer_Run(t *testing.T) {
 		defer ctrl.Finish()
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("GRPC_PORT").Return("", nil)
-		mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(testdata.cert, nil)
-		mc.EXPECT().Get("SERVER_KEY_FILE_PATH").Return(testdata.key, nil)
-		mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health", nil)
+		mc.EXPECT().Get("GRPC_PORT").Return("")
+		mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health")
+		mc.EXPECT().Get("TLS").Return("false")
 		config.SetConfig(mc)
 
 		s, _ := NewServer()
@@ -202,10 +200,9 @@ func TestServer_Run(t *testing.T) {
 		di.SetDi(md)
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("GRPC_PORT").Return("50051", nil)
-		mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(testdata.cert, nil)
-		mc.EXPECT().Get("SERVER_KEY_FILE_PATH").Return(testdata.key, nil)
-		mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health", nil)
+		mc.EXPECT().Get("GRPC_PORT").Return("50051")
+		mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health")
+		mc.EXPECT().Get("TLS").Return("false")
 		config.SetConfig(mc)
 
 		s, _ := NewServer()
@@ -216,10 +213,13 @@ func TestServer_Run(t *testing.T) {
 	t.Run("run translator", func(t *testing.T) {
 		tests := []struct {
 			name string
+			tls  string
 			err  bool
 		}{
-			{name: "ok"},
-			{name: "error", err: true},
+			{name: "ok", tls: "false"},
+			{name: "ok tls", tls: "true"},
+			{name: "error", tls: "false", err: true},
+			{name: "error tls", tls: "true", err: true},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -233,21 +233,30 @@ func TestServer_Run(t *testing.T) {
 				di.SetDi(md)
 
 				ml := log.NewMockLogger(ctrl)
-				ml.EXPECT().Info(gomock.Any(), log.StringValue("server start: port=50051"))
+				if tt.tls == "true" {
+					ml.EXPECT().Info(gomock.Any(), log.StringValue("server start: tls=on port=50051"))
+				} else {
+					ml.EXPECT().Info(gomock.Any(), log.StringValue("server start: tls=off port=50051"))
+				}
 				if !tt.err {
 					ml.EXPECT().Info(gomock.Any(), log.StringValue("server end"))
 				}
 				log.SetLogger(ml)
 
 				mc := config.NewMockConfig(ctrl)
-				mc.EXPECT().Get("GRPC_PORT").Return("", nil)
-				mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health", nil)
-				if tt.err {
-					mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(testdata.invalidCert, nil)
-				} else {
-					mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(testdata.cert, nil)
+				mc.EXPECT().Get("GRPC_PORT").Return("")
+				mc.EXPECT().Get("HEALTH_CHECK_PATH").Return("/health")
+				mc.EXPECT().Get("TLS").Return(tt.tls)
+
+				if tt.tls == "true" {
+					if tt.err {
+						mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(testdata.invalidCert)
+					} else {
+						mc.EXPECT().Get("SERVER_CERT_FILE_PATH").Return(testdata.cert)
+					}
+					mc.EXPECT().Get("SERVER_KEY_FILE_PATH").Return(testdata.key)
 				}
-				mc.EXPECT().Get("SERVER_KEY_FILE_PATH").Return(testdata.key, nil)
+
 				config.SetConfig(mc)
 
 				s, _ := NewServer()

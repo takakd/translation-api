@@ -37,8 +37,7 @@ func TestEnvConfig_Get(t *testing.T) {
 			config, err := NewEnvConfig(envPath)
 			require.NoError(t, err)
 
-			got, err := config.Get(tt.key)
-			assert.NoError(t, err)
+			got := config.Get(tt.key)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -53,8 +52,7 @@ func TestEnvConfig_Get(t *testing.T) {
 		config, err := NewEnvConfig(envPath)
 		require.NoError(t, err)
 
-		got, err := config.Get("NAME3")
-		assert.NoError(t, err)
+		got := config.Get("NAME3")
 		assert.Equal(t, want, got)
 	})
 
@@ -67,8 +65,7 @@ func TestEnvConfig_Get(t *testing.T) {
 		want := "override"
 		os.Setenv("NAME1", want)
 
-		got, err := config.Get("NAME1")
-		assert.NoError(t, err)
+		got := config.Get("NAME1")
 		assert.Equal(t, want, got)
 	})
 }

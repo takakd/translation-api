@@ -22,18 +22,12 @@ var _ translatorapp.TextTranslator = (*TranslationAPI)(nil)
 
 // NewTranslationAPI creates new struct.
 func NewTranslationAPI() (*TranslationAPI, error) {
-	var err error
-
 	a := &TranslationAPI{}
 
-	a.projectID, err = config.Get("GOOGLE_PROJECT_ID")
-	if a.projectID == "" || err != nil {
-		return nil, fmt.Errorf("config error name=GOOGLE_PROJECT_ID: %w", err)
-	}
-
-	a.apiKeyFilePath, err = config.Get("GOOGLE_KEY_FILE_PATH")
-	if a.apiKeyFilePath == "" || err != nil {
-		return nil, fmt.Errorf("config error name=GOOGLE_KEY_FILE_PATH: %w", err)
+	a.projectID = config.Get("GOOGLE_PROJECT_ID")
+	a.apiKeyFilePath = config.Get("GOOGLE_KEY_FILE_PATH")
+	if a.projectID == "" || a.apiKeyFilePath == "" {
+		return nil, fmt.Errorf("config error: GOOGLE_PROJECT_ID=%s, GOOGLE_KEY_FILE_PATH=%s", a.projectID, a.apiKeyFilePath)
 	}
 
 	return a, nil

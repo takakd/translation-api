@@ -15,23 +15,16 @@ import (
 )
 
 func TestNewTranslationAPI(t *testing.T) {
-	tError := errors.New("error")
 	tests := []struct {
-		name         string
-		region       string
-		regionErr    error
-		keyID        string
-		keyIDErr     error
-		accessKey    string
-		accessKeyErr error
+		name      string
+		region    string
+		keyID     string
+		accessKey string
 	}{
-		{name: "region empty", region: "", regionErr: nil, keyID: "key", keyIDErr: nil, accessKey: "access", accessKeyErr: nil},
-		{name: "region error", region: "region", regionErr: tError, keyID: "key", keyIDErr: nil, accessKey: "access", accessKeyErr: nil},
-		{name: "keyID empty", region: "region", regionErr: nil, keyID: "", keyIDErr: nil, accessKey: "access", accessKeyErr: nil},
-		{name: "keyID error", region: "region", regionErr: nil, keyID: "key", keyIDErr: tError, accessKey: "access", accessKeyErr: nil},
-		{name: "accessKey empty", region: "region", regionErr: nil, keyID: "key", keyIDErr: nil, accessKey: "", accessKeyErr: nil},
-		{name: "accessKey error", region: "region", regionErr: nil, keyID: "key", keyIDErr: nil, accessKey: "access", accessKeyErr: tError},
-		{name: "ok", region: "region", regionErr: nil, keyID: "key", keyIDErr: nil, accessKey: "access", accessKeyErr: nil},
+		{name: "region empty", region: "", keyID: "key", accessKey: "access"},
+		{name: "keyID empty", region: "region", keyID: "", accessKey: "access"},
+		{name: "accessKey empty", region: "region", keyID: "key", accessKey: ""},
+		{name: "ok", region: "region", keyID: "key", accessKey: "access"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -39,11 +32,11 @@ func TestNewTranslationAPI(t *testing.T) {
 			defer ctrl.Finish()
 
 			mc := config.NewMockConfig(ctrl)
-			mc.EXPECT().Get("AWS_REGION").Return(tt.region, tt.regionErr)
-			if tt.region != "" && tt.regionErr == nil {
-				mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return(tt.keyID, tt.keyIDErr)
-				if tt.keyID != "" && tt.keyIDErr == nil {
-					mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return(tt.accessKey, tt.accessKeyErr)
+			mc.EXPECT().Get("AWS_REGION").Return(tt.region)
+			if tt.region != "" {
+				mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return(tt.keyID)
+				if tt.keyID != "" {
+					mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return(tt.accessKey)
 				}
 			}
 			config.SetConfig(mc)
@@ -122,9 +115,9 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		defer ctrl.Finish()
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("AWS_REGION").Return("region", nil)
-		mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return("key", nil)
-		mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return("access", nil)
+		mc.EXPECT().Get("AWS_REGION").Return("region")
+		mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return("key")
+		mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return("access")
 		config.SetConfig(mc)
 
 		s, err := NewTranslationAPI()
@@ -140,9 +133,9 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		defer ctrl.Finish()
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("AWS_REGION").Return("region", nil)
-		mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return("key", nil)
-		mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return("access", nil)
+		mc.EXPECT().Get("AWS_REGION").Return("region")
+		mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return("key")
+		mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return("access")
 		config.SetConfig(mc)
 
 		md := di.NewMockDI(ctrl)
@@ -164,9 +157,9 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		ctx := context.TODO()
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("AWS_REGION").Return("region", nil)
-		mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return("key", nil)
-		mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return("access", nil)
+		mc.EXPECT().Get("AWS_REGION").Return("region")
+		mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return("key")
+		mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return("access")
 		config.SetConfig(mc)
 
 		ms := NewMockTranslateWrapper(ctrl)
@@ -213,9 +206,9 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		}
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("AWS_REGION").Return("region", nil)
-		mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return("key", nil)
-		mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return("access", nil)
+		mc.EXPECT().Get("AWS_REGION").Return("region")
+		mc.EXPECT().Get("AWS_ACCESS_KEY_ID").Return("key")
+		mc.EXPECT().Get("AWS_SECRET_ACCESS_KEY").Return("access")
 		config.SetConfig(mc)
 
 		ms := NewMockTranslateWrapper(ctrl)

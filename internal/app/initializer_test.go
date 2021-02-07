@@ -52,13 +52,13 @@ func TestInitConfig(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			// Test value after setupConfig
-			cnfName := "did_set"
-			cnfValue := "ok"
+			// Case value after InitConfig
+			wantName := "did_set"
+			wantValue := "ok"
 
 			mc := config.NewMockConfig(ctrl)
 			if tt.err == nil {
-				mc.EXPECT().Get(cnfName).Return(cnfValue, nil)
+				mc.EXPECT().Get(wantName).Return(wantValue)
 			}
 
 			md := di.NewMockDI(ctrl)
@@ -79,8 +79,8 @@ func TestInitConfig(t *testing.T) {
 				assert.NoError(t, err)
 
 				// Check config
-				v, _ := config.Get(cnfName)
-				assert.Equal(t, cnfValue, v)
+				v := config.Get(wantName)
+				assert.Equal(t, wantValue, v)
 			}
 		})
 	}
@@ -96,7 +96,7 @@ func TestInitLogger(t *testing.T) {
 		{name: "debug", levelLabel: "", level: log.LevelDebug},
 		{name: "error", levelLabel: "ERROR", level: log.LevelError},
 		{name: "info", levelLabel: "INFO", level: log.LevelInfo},
-		{name: "set error", levelLabel: "INFO", level: log.LevelInfo, err: errors.New("error")},
+		{name: "error", levelLabel: "INFO", level: log.LevelInfo, err: errors.New("error")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -104,17 +104,17 @@ func TestInitLogger(t *testing.T) {
 			defer ctrl.Finish()
 
 			ml := log.NewMockLogger(ctrl)
+			mc := config.NewMockConfig(ctrl)
 
 			if tt.err == nil {
 				ml.EXPECT().SetLevel(tt.level)
+				mc.EXPECT().Get("DEBUG_LEVEL").Return(tt.levelLabel)
 			}
 
 			md := di.NewMockDI(ctrl)
-			md.EXPECT().Get("util.log.Logger").Return(ml, nil)
+			md.EXPECT().Get("util.log.Logger").Return(ml, tt.err)
 			di.SetDi(md)
 
-			mc := config.NewMockConfig(ctrl)
-			mc.EXPECT().Get("DEBUG_LEVEL").Return(tt.levelLabel, tt.err)
 			config.SetConfig(mc)
 
 			err := InitLogger()

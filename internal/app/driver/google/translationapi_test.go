@@ -22,11 +22,10 @@ func TestNewTranslationAPI(t *testing.T) {
 		name       string
 		projectID  string
 		apiKeyPath string
-		err        error
 	}{
 		{name: "project id empty", projectID: "", apiKeyPath: "value"},
 		{name: "api key path empty", projectID: "value", apiKeyPath: ""},
-		{name: "error", projectID: "value", apiKeyPath: "value", err: errors.New("error")},
+		{name: "error", projectID: "value", apiKeyPath: "value"},
 		{name: "ok", projectID: "value", apiKeyPath: "testdata/google.key.json"},
 	}
 	for _, tt := range tests {
@@ -35,15 +34,12 @@ func TestNewTranslationAPI(t *testing.T) {
 			defer ctrl.Finish()
 
 			mc := config.NewMockConfig(ctrl)
-			mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(tt.projectID, tt.err)
+			mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(tt.projectID)
+			mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return(tt.apiKeyPath)
 			config.SetConfig(mc)
 
-			if tt.projectID != "" && tt.err == nil {
-				mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return(tt.apiKeyPath, tt.err)
-			}
-
 			_, err := NewTranslationAPI()
-			if tt.projectID != "" && tt.apiKeyPath != "" && tt.err == nil {
+			if tt.projectID != "" && tt.apiKeyPath != "" {
 				assert.NoError(t, err)
 			} else {
 				assert.Error(t, err)
@@ -118,8 +114,8 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		defer ctrl.Finish()
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return("id", nil)
-		mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return("testdata/google.key.json", nil)
+		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return("id")
+		mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return("testdata/google.key.json")
 		config.SetConfig(mc)
 
 		s, err := NewTranslationAPI()
@@ -135,8 +131,8 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		defer ctrl.Finish()
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return("id", nil)
-		mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return("testdata/google.key.json", nil)
+		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return("id")
+		mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return("testdata/google.key.json")
 		config.SetConfig(mc)
 
 		md := di.NewMockDI(ctrl)
@@ -170,8 +166,8 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		}
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(projectID, nil)
-		mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return("testdata/google.key.json", nil)
+		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(projectID)
+		mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return("testdata/google.key.json")
 		config.SetConfig(mc)
 
 		mt := NewMockClientWrapper(ctrl)
@@ -223,8 +219,8 @@ func TestTranslationAPI_Translate(t *testing.T) {
 		}
 
 		mc := config.NewMockConfig(ctrl)
-		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(projectID, nil)
-		mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return("testdata/google.key.json", nil)
+		mc.EXPECT().Get("GOOGLE_PROJECT_ID").Return(projectID)
+		mc.EXPECT().Get("GOOGLE_KEY_FILE_PATH").Return("testdata/google.key.json")
 		config.SetConfig(mc)
 
 		mt := NewMockClientWrapper(ctrl)

@@ -13,7 +13,7 @@ func ExampleGet() {
 	c, _ := config2.NewEnvConfig()
 	config.SetConfig(c)
 
-	configValue, _ := config.Get("EXAMPLE_KEY")
+	configValue := config.Get("EXAMPLE_KEY")
 
 	fmt.Println(configValue)
 

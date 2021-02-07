@@ -73,13 +73,7 @@ func InitLogger() error {
 	log.SetLogger(logger.(log.Logger))
 
 	level := log.LevelDebug
-
-	logLevel, err := config.Get("DEBUG_LEVEL")
-	if err != nil {
-		return fmt.Errorf("failed to get DEBUG_LEVEL: %w", err)
-	}
-
-	switch logLevel {
+	switch config.Get("DEBUG_LEVEL") {
 	case "INFO":
 		level = log.LevelInfo
 	case "ERROR":

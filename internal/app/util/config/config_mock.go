@@ -34,12 +34,11 @@ func (m *MockConfig) EXPECT() *MockConfigMockRecorder {
 }
 
 // Get mocks base method
-func (m *MockConfig) Get(name string) (string, error) {
+func (m *MockConfig) Get(name string) string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", name)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // Get indicates an expected call of Get

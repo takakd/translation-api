@@ -1,10 +1,6 @@
 // Package config provides config values used in the app.
 package config
 
-import (
-	"fmt"
-)
-
 var (
 	// Use this interface for managing config.
 	config Config
@@ -12,7 +8,7 @@ var (
 
 // Config defines methods that returns config values used in the application.
 type Config interface {
-	Get(name string) (string, error)
+	Get(name string) string
 }
 
 // SetConfig sets config used "config.Get".
@@ -21,9 +17,9 @@ func SetConfig(c Config) {
 }
 
 // Get returns the config value.
-func Get(name string) (string, error) {
+func Get(name string) string {
 	if config == nil {
-		return "", fmt.Errorf("config is null")
+		panic("config driver is not set")
 	}
 	return config.Get(name)
 }

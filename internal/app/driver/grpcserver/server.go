@@ -25,49 +25,43 @@ const (
 // Server is used to implement translator.TranslatorServer.
 type Server struct {
 	pbt.UnimplementedTranslatorServer
-	gs           *grpc.Server
-	srv          *http.Server
-	port         string
-	certFilePath string
-	keyFilePath  string
-
+	gs              *grpc.Server
+	srv             *http.Server
+	port            string
 	healthCheckPath string
 	ln              net.Listener
+
+	tlsEnabled   bool
+	certFilePath string
+	keyFilePath  string
 }
 
-// NewServer creates new struct.
+// NewServer creates new server.
 func NewServer() (*Server, error) {
 	s := &Server{}
 
-	var err error
-
-	s.port, err = config.Get("GRPC_PORT")
-	if err != nil {
-		return nil, fmt.Errorf("port error: %w", err)
-	}
+	s.port = config.Get("GRPC_PORT")
 	if s.port == "" {
 		s.port = DefaultPort
 	}
 
-	s.certFilePath, err = config.Get("SERVER_CERT_FILE_PATH")
-	if err != nil {
-		return nil, fmt.Errorf("server cert file error: %w", err)
-	} else if !util.FileExists(s.certFilePath) {
-		return nil, fmt.Errorf("server cert file not exists: path=%s", s.certFilePath)
-	}
-
-	s.keyFilePath, err = config.Get("SERVER_KEY_FILE_PATH")
-	if err != nil {
-		return nil, fmt.Errorf("server key file error: %w", err)
-	} else if !util.FileExists(s.keyFilePath) {
-		return nil, fmt.Errorf("server key file not exists: path=%s", s.certFilePath)
-	}
-
-	s.healthCheckPath, err = config.Get("HEALTH_CHECK_PATH")
-	if err != nil {
-		return nil, fmt.Errorf("health check path error: %w", err)
-	} else if s.healthCheckPath == "" {
+	s.healthCheckPath = config.Get("HEALTH_CHECK_PATH")
+	if s.healthCheckPath == "" {
 		return nil, fmt.Errorf("health check path empty error")
+	}
+
+	if tls := config.Get("TLS"); tls == "true" {
+		s.tlsEnabled = true
+	} else {
+		s.tlsEnabled = false
+	}
+
+	if s.tlsEnabled {
+		s.certFilePath = config.Get("SERVER_CERT_FILE_PATH")
+		s.keyFilePath = config.Get("SERVER_KEY_FILE_PATH")
+		if !util.FileExists(s.certFilePath) || !util.FileExists(s.keyFilePath) {
+			return nil, fmt.Errorf("server cert files not exists: cert=%s, key=%s", s.certFilePath, s.keyFilePath)
+		}
 	}
 
 	return s, nil
@@ -112,8 +106,6 @@ func (s *Server) Run() error {
 	}
 	pbt.RegisterTranslatorServer(s.gs, translatorCtrl.(pbt.TranslatorServer))
 
-	log.Info(context.Background(), log.StringValue(fmt.Sprintf("server start: port=%s", s.port)))
-
 	// Create TCP listener
 	s.srv = &http.Server{
 		Addr:    fmt.Sprintf(":%s", s.port),
@@ -126,8 +118,16 @@ func (s *Server) Run() error {
 	defer s.ln.Close()
 
 	// Run
-	if err := s.srv.ServeTLS(s.ln, s.certFilePath, s.keyFilePath); err != http.ErrServerClosed {
-		return fmt.Errorf("failed to serve: %v", err)
+	if s.tlsEnabled {
+		log.Info(context.Background(), log.StringValue(fmt.Sprintf("server start: tls=on port=%s", s.port)))
+		if err := s.srv.ServeTLS(s.ln, s.certFilePath, s.keyFilePath); err != http.ErrServerClosed {
+			return fmt.Errorf("failed to serve: %v", err)
+		}
+	} else {
+		log.Info(context.Background(), log.StringValue(fmt.Sprintf("server start: tls=off port=%s", s.port)))
+		if err := s.srv.Serve(s.ln); err != http.ErrServerClosed {
+			return fmt.Errorf("failed to serve: %v", err)
+		}
 	}
 
 	log.Info(context.Background(), log.StringValue("server end"))

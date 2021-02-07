@@ -272,6 +272,10 @@ func TestController_Translate(t *testing.T) {
 			mgt.EXPECT().Translate(ctx, text, srcLangType, targetLangType).Return(tt.googleRes, tt.googleErr)
 
 			ml := log.NewMockLogger(ctrl)
+
+			// TODO: check requestID
+			ml.EXPECT().Info(gomock.Any(), gomock.Any())
+
 			ml.EXPECT().Info(gomock.Any(), gomock.Any())
 			log.SetLogger(ml)
 

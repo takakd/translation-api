@@ -22,8 +22,8 @@ var _ translator.TextTranslator = (*TranslationAPI)(nil)
 func NewTranslationAPI() (*TranslationAPI, error) {
 	// Check to exist environment variables because AWS SDK reads credentials through environment variables.
 	for _, v := range []string{"AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"} {
-		if cv, err := config.Get(v); cv == "" || err != nil {
-			return nil, fmt.Errorf(`config error name=%s: %w`, v, err)
+		if cv := config.Get(v); cv == "" {
+			return nil, fmt.Errorf(`config error name=%s`, v)
 		}
 	}
 	return &TranslationAPI{}, nil

@@ -27,6 +27,6 @@ func NewEnvConfig(filepathList ...string) (*EnvConfig, error) {
 }
 
 // Get returns value corresponding name.
-func (e EnvConfig) Get(name string) (string, error) {
-	return os.Getenv(strings.ToUpper(name)), nil
+func (e EnvConfig) Get(name string) string {
+	return os.Getenv(strings.ToUpper(name))
 }
