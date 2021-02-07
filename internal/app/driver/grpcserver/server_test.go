@@ -17,6 +17,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"context"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -231,7 +233,7 @@ func TestServer_Run(t *testing.T) {
 				di.SetDi(md)
 
 				ml := log.NewMockLogger(ctrl)
-				ml.EXPECT().Info(gomock.Any(), log.StringValue("server start"))
+				ml.EXPECT().Info(gomock.Any(), log.StringValue("server start: port=50051"))
 				if !tt.err {
 					ml.EXPECT().Info(gomock.Any(), log.StringValue("server end"))
 				}
@@ -267,8 +269,10 @@ func TestServer_Run(t *testing.T) {
 				// Wait to run server.
 				time.Sleep(1 * time.Second)
 
-				if !tt.err {
-					s.srv.Close()
+				if tt.err {
+					s.ln.Close()
+				} else {
+					s.srv.Shutdown(context.TODO())
 				}
 
 				// Wait to receive error in chErr.

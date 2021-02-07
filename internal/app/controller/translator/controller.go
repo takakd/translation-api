@@ -10,8 +10,6 @@ import (
 	"api/internal/app/util/di"
 
 	"sync"
-
-	"github.com/google/uuid"
 )
 
 // Controller handles translate API.
@@ -116,9 +114,12 @@ func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *Translate
 
 // Translate processes a method of Translator gRPC service.
 func (c *Controller) Translate(ctx context.Context, r *translator.TranslateRequest) (*translator.TranslateResponse, error) {
-	appCtx := log.WithLogContextValue(ctx, uuid.New().String())
-	appCtx, cancel := context.WithTimeout(appCtx, time.Minute)
+	//appCtx := log.WithLogContextValue(ctx, uuid.New().String())
+	appCtx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
+
+	// TODO: check requestID
+	log.Info(appCtx, log.StringValue(""))
 
 	// Access log
 	now := time.Now()
