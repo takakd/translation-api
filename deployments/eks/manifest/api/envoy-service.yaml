@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-service
+  labels:
+    app/role: envoy-service
+  annotations:
+    #   > Note: The ALB Ingress Controller works only in the IP mode on Amazon EKS for Fargate. For more information, see Ingress annotations on the AWS ALB Ingress Controller website.
+    #   Ref. https://aws.amazon.com/premiumsupport/knowledge-center/eks-alb-ingress-controller-fargate/?nc1=h_ls
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  type: ClusterIP
+  selector:
+    app/role: envoy-pod
+  ports:
+  - port: 9000
+    targetPort: envoy-port
+    protocol: TCP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enovy-deployment
+  labels:
+    app/role: envoy-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app/role: envoy-pod
+  template:
+    metadata:
+      name: enovy-pod
+      labels:
+        app/role: envoy-pod
+      annotations:
+        CapacityProvisioned: 0.25vCPU 0.5GB
+    spec:
+      containers:
+        - name: envoy-pod
+          image: envoyproxy/envoy:v1.16.1
+          imagePullPolicy: Always
+          ports:
+            - name: envoy-port
+              containerPort: 9000
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/envoy
+            - name: secrets
+              mountPath: /app/certs
+      volumes:
+        - name: config
+          configMap:
+            name: envoy-configmap
+        - name: secrets
+          secret:
+            secretName: api-secrets-file

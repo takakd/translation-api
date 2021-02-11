@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    # Add the certificate ARN.
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-1:123456:certificate/...
+spec:
+  rules:
+    # Add the domain.
+    - host: api.example.com
+      http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: envoy-service
+              servicePort: 9000

@@ -51,12 +51,13 @@ subjects:
   - kind: ServiceAccount
     name: alb-ingress-controller
     namespace: kube-system
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app.kubernetes.io/name: alb-ingress-controller
-  name: alb-ingress-controller
-  namespace: kube-system
-...
+#---
+# ServiceAccount is created by AWS CLI.
+# Ref. https://aws.amazon.com/jp/premiumsupport/knowledge-center/eks-alb-ingress-controller-fargate/
+#apiVersion: v1
+#kind: ServiceAccount
+#metadata:
+#  labels:
+#    app.kubernetes.io/name: alb-ingress-controller
+#  name: alb-ingress-controller
+#  namespace: kube-system

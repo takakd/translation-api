@@ -2,9 +2,8 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: api-config-env
-  namespace: translatorapp
   labels:
-    app/role: translatorapp-api-config
+    app/role: api-config
 data:
   APP_ENV: "prod"
   DEBUG_LEVEL: "DEBUG"
