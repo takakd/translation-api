@@ -14,7 +14,7 @@ spec:
     app/role: envoy-pod
   ports:
   - port: 9000
-    targetPort: envoy-port
+    targetPort: 9000
     protocol: TCP
 
 ---
@@ -40,10 +40,9 @@ spec:
       containers:
         - name: envoy-pod
           image: envoyproxy/envoy:v1.16.1
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
-            - name: envoy-port
-              containerPort: 9000
+            - containerPort: 9000
               protocol: TCP
           volumeMounts:
             - name: config

@@ -10,7 +10,7 @@ spec:
     app/role: api-pod
   ports:
     - port: 50051
-      targetPort: grpc
+      targetPort: 50051
       protocol: TCP
 
 ---
@@ -39,8 +39,7 @@ spec:
           image: <AWS account>.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - name: grpc
-              containerPort: 50051
+            - containerPort: 50051
               protocol: TCP
           envFrom:
             - configMapRef:

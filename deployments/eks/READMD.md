@@ -49,11 +49,10 @@ $ aws ecr get-login-password --region ap-northeast-1 | docker login --username A
 
 @TODO
 
-Build a :w
-docker image.
+Build docker image.
 
 ```sh
-$ ../../buildimage.sh 123456.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api
+$ ../../scripts/buildimage.sh 123456.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api
 ```
 
 Push the image.
