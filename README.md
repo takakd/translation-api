@@ -1,193 +1,206 @@
-# Standard Go Project Layout
+<h1 align="center">Translation gRPC API</h1>
 
-Translations:
+<p align="center">Translate text with <a href="https://aws.amazon.com/jp/translate/" alt="Amazon Translate">Amazon Translate</a> and <a href="https://cloud.google.com/translate/" alt="Google Translation">Google Translation</a>.</p>
 
-* [한국어 문서](README_ko.md)
-* [中文文档](README_zh.md)
-* [Français](README_fr.md)
+<p align="center">
+<a target="_blank" rel="noopener noreferrer" href="https://camo.githubusercontent.com/a568b3692dcc72af17d4abfed1b2c81d47f05dcaaefb021c9f9d3d6a856d3e6e/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4c6963656e73652d4d49542d696e666f726d6174696f6e616c3f7374796c653d666c6174"><img src="https://camo.githubusercontent.com/a568b3692dcc72af17d4abfed1b2c81d47f05dcaaefb021c9f9d3d6a856d3e6e/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4c6963656e73652d4d49542d696e666f726d6174696f6e616c3f7374796c653d666c6174" alt="License-MIT" data-canonical-src="https://img.shields.io/badge/License-MIT-informational?style=flat" style="max-width:100%;"></a>
+</p>
 
-## Overview
+<br>
 
-This is a basic layout for Go application projects. It's not an official standard defined by the core Go dev team; however, it is a set of common historical and emerging project layout patterns in the Go ecosystem. Some of these patterns are more popular than others. It also has a number of small enhancements along with several supporting directories common to any large enough real world application.
+## Table of Contents
 
-If you are trying to learn Go or if you are building a PoC or a toy project for yourself this project layout is an overkill. Start with something really simple (a single `main.go` file is more than enough). As your project grows keep in mind that it'll be important to make sure your code is well structured otherwise you'll end up with a messy code with lots of hidden dependencies and global state. When you have more people working on the project you'll need even more structure. That's when it's important to introduce a common way to manage packages/libraries. When you have an open source project or when you know other projects import the code from your project repository that's when it's important to have private (aka `internal`) packages and code. Clone the repository, keep what you need and delete everything else! Just because it's there it doesn't mean you have to use it all. None of these patterns are used in every single project. Even the `vendor` pattern is not universal.
+- [Features](#features)
+- [Usage](#usage)
+- [Development](#development)
+- [License](#license)
 
-With Go 1.14 [`Go Modules`](https://github.com/golang/go/wiki/Modules) are finally ready for production. Use [`Go Modules`](https://blog.golang.org/using-go-modules) unless you have a specific reason not to use them and if you do then you don’t need to worry about $GOPATH and where you put your project. The basic `go.mod` file in the repo assumes your project is hosted on GitHub, but it's not a requirement. The module path can be anything though the first module path component should have a dot in its name (the current version of Go doesn't enforce it anymore, but if you are using slightly older versions don't be surprised if your builds fail without it). See Issues [`37554`](https://github.com/golang/go/issues/37554) and [`32819`](https://github.com/golang/go/issues/32819) if you want to know more about it.
+## Features
 
-This project layout is intentionally generic and it doesn't try to impose a specific Go package structure.
+- Translate text with Google Translation API and Amazon Translate API.
 
-This is a community effort. Open an issue if you see a new pattern or if you think one of the existing patterns needs to be updated.
+## Setup
 
-If you need help with naming, formatting and style start by running [`gofmt`](https://golang.org/cmd/gofmt/) and [`golint`](https://github.com/golang/lint). Also make sure to read these Go code style guidelines and recommendations:
-* https://talks.golang.org/2014/names.slide
-* https://golang.org/doc/effective_go.html#names
-* https://blog.golang.org/package-names
-* https://github.com/golang/go/wiki/CodeReviewComments
-* [Style guideline for Go packages](https://rakyll.org/style-packages) (rakyll/JBD)
+### Set environment variables
 
-See [`Go Project Layout`](https://medium.com/golang-learn/go-project-layout-e5213cdcfaa2) for additional background information.
+Set each environment variable to each Lambda function the following.
 
-More about naming and organizing packages as well as other code structure recommendations:
-* [GopherCon EU 2018: Peter Bourgon - Best Practices for Industrial Programming](https://www.youtube.com/watch?v=PTE4VJIdHPg)
-* [GopherCon Russia 2018: Ashley McNamara + Brian Ketelsen - Go best practices.](https://www.youtube.com/watch?v=MzTcsI6tn-0)
-* [GopherCon 2017: Edward Muller - Go Anti-Patterns](https://www.youtube.com/watch?v=ltqV6pDKZD8)
-* [GopherCon 2018: Kat Zien - How Do You Structure Your Go Apps](https://www.youtube.com/watch?v=oL6JBUk6tj0)
+Key | Value | e.g.
+---- | ---- | ---
+DEBUG_LEVEL | Log level. Set `DEBUG` or `INFO` | DEBUG
+GRPC_PORT | API port number |  50051
+AWS_ACCESS_KEY_ID | AWS AccessKeyID to use Amazon Translate | AKI...
+AWS_SECRET_ACCESS_KEY | AWS SecretAccessKey to use Amazon Translate | 4pfWR38...
+AWS_REGION | AWS region to use Amazon Translate | ap-northeast-1
+GOOGLE_PROJECT_ID | GOOGLE projectID to use Google Translation API | translator-123456
+GOOGLE_API_KEY | GOOGLE service account credential JSON use Google Translation API |  {  "type": "service_account",  "project_id": "example",  "private_key_id": "0000000000" ... }
 
-A Chinese Post about Package-Oriented-Design guidelines and Architecture layer
-* [面向包的设计和架构分层](https://github.com/danceyoung/paper-code/blob/master/package-oriented-design/packageorienteddesign.md)
+See also [.env.example](cmd/api/.env.example).
 
-## Go Directories
+## Usage
 
-### `/cmd`
+Run gRPC server.
 
-Main applications for this project.
+```
+$ ./cmd/api/api
+```
 
-The directory name for each application should match the name of the executable you want to have (e.g., `/cmd/myapp`).
+### Use .env file
 
-Don't put a lot of code in the application directory. If you think the code can be imported and used in other projects, then it should live in the `/pkg` directory. If the code is not reusable or if you don't want others to reuse it, put that code in the `/internal` directory. You'll be surprised what others will do, so be explicit about your intentions!
+Set `ENV_FILE` to use .env file.
 
-It's common to have a small `main` function that imports and invokes the code from the `/internal` and `/pkg` directories and nothing else.
+```
+$ ENV_FILE=/some/where/.env ./cmd/api/api
+```
 
-See the [`/cmd`](cmd/README.md) directory for examples.
+## Example
 
-### `/internal`
+### Run on Kubernets service.
 
-Private application and library code. This is the code you don't want others importing in their applications or libraries. Note that this layout pattern is enforced by the Go compiler itself. See the Go 1.4 [`release notes`](https://golang.org/doc/go1.4#internalpackages) for more details. Note that you are not limited to the top level `internal` directory. You can have more than one `internal` directory at any level of your project tree.
+- [AWS EKS]()
+- [Google GKE]()
 
-You can optionally add a bit of extra structure to your internal packages to separate your shared and non-shared internal code. It's not required (especially for smaller projects), but it's nice to have visual clues showing the intended package use. Your actual application code can go in the `/internal/app` directory (e.g., `/internal/app/myapp`) and the code shared by those apps in the `/internal/pkg` directory (e.g., `/internal/pkg/myprivlib`).
+### Translation application with this API.
 
-### `/pkg`
+- []
 
-Library code that's ok to use by external applications (e.g., `/pkg/mypubliclib`). Other projects will import these libraries expecting them to work, so think twice before you put something here :-) Note that the `internal` directory is a better way to ensure your private packages are not importable because it's enforced by Go. The `/pkg` directory is still a good way to explicitly communicate that the code in that directory is safe for use by others. The [`I'll take pkg over internal`](https://travisjeffery.com/b/2019/11/i-ll-take-pkg-over-internal/) blog post by Travis Jeffery provides a good overview of the `pkg` and `internal` directories and when it might make sense to use them.
 
-It's also a way to group Go code in one place when your root directory contains lots of non-Go components and directories making it easier to run various Go tools (as mentioned in these talks: [`Best Practices for Industrial Programming`](https://www.youtube.com/watch?v=PTE4VJIdHPg) from GopherCon EU 2018, [GopherCon 2018: Kat Zien - How Do You Structure Your Go Apps](https://www.youtube.com/watch?v=oL6JBUk6tj0) and [GoLab 2018 - Massimiliano Pippi - Project layout patterns in Go](https://www.youtube.com/watch?v=3gQa1LWwuzk)).
+## Development
 
-See the [`/pkg`](pkg/README.md) directory if you want to see which popular Go repos use this project layout pattern. This is a common layout pattern, but it's not universally accepted and some in the Go community don't recommend it.
+### Tech stacks
 
-It's ok not to use it if your app project is really small and where an extra level of nesting doesn't add much value (unless you really want to :-)). Think about it when it's getting big enough and your root directory gets pretty busy (especially if you have a lot of non-Go app components).
+- Golang
+- gRPC
 
-### `/vendor`
+### Setup
 
-Application dependencies (managed manually or by your favorite dependency management tool like the new built-in [`Go Modules`](https://github.com/golang/go/wiki/Modules) feature). The `go mod vendor` command will create the `/vendor` directory for you. Note that you might need to add the `-mod=vendor` flag to your `go build` command if you are not using Go 1.14 where it's on by default.
+1. Install Golang by following [Download and install](https://golang.org/doc/install).
+2. Run `go mod vendor` to get modules.
 
-Don't commit your application dependencies if you are building a library.
+#### Requirements
 
-Note that since [`1.13`](https://golang.org/doc/go1.13#modules) Go also enabled the module proxy feature (using [`https://proxy.golang.org`](https://proxy.golang.org) as their module proxy server by default). Read more about it [`here`](https://blog.golang.org/module-mirror-launch) to see if it fits all of your requirements and constraints. If it does, then you won't need the `vendor` directory at all.
+- go version go1.14.4 darwin/amd64
+- AWS IAM credentials that can use Amazon Translate.
+- Google service account that can use Google Translation API.
 
-## Service Application Directories
+### Command
 
-### `/api`
+**Testing**
 
-OpenAPI/Swagger specs, JSON schema files, protocol definition files.
+Run test With details: "-v" and "-cover"
+
+```
+$ make test
+```
 
-See the [`/api`](api/README.md) directory for examples.
+**Formatting codes**
 
-## Web Application Directories
+Run "go fmt", "goimports", and "go lint".
 
-### `/web`
+```
+$ make fmt
+```
+
+**Run**
+
+Run on local, use `cmd/api/.env.local` if it exists.
+
+```
+$ make run
+```
+
+### Structure
+
+- Directory structure refers to [golang-standards/project-layout](https://github.com/golang-standards/project-layout).
+- Serve gRPC API with envoy where the client apps requests.
+
+#### Design
+
+![Design](docs/design.jpg?raw=true)
+
+#### Sources
+
+```sh
+.
+|-- Makefile            <-- Defines make command targets
+|-- README.layout.md    <-- golang-standards/project-layout README
+|-- README.md           <-- This instruction file
+|-- cmd
+|   `-- api
+|       |-- .env.local      <-- Environment variables on local
+|       |-- .env.example    <-- Environment variables example
+|       |-- api             <-- This API binary
+|       `-- api.go          <-- main func
+|
+|-- deployments
+|   `-- envoy                   <-- Envoy config directory
+|       |-- docker-compose.yml  <-- docker-compose config for local
+|       `-- envoy.yaml          <-- Envoy config
+|
+|-- docs
+|   `-- logo.svg
+|-- go.mod      <-- go module list
+|-- go.sum      <-- go module hash list
+|
+|-- internal
+|   |-- app                     <-- This app directory
+|   |   |-- controller          <-- Controller layer
+|   |   |   `-- translator      <-- gRPC handler
+|   |   |       `-- ...
+|   |   |-- driver              <-- Driver layer
+|   |   |   |-- aws             <-- Codes related to handle AWS translate service
+|   |   |   |   `-- ...
+|   |   |   |-- config          <-- Concrete implementation of Config methods
+|   |   |   |   `-- ...
+|   |   |   |
+|   |   |   |-- google          <-- Codes related to handle Google Translation API.
+|   |   |   |   `-- ...
+|   |   |   |-- grpcserver      <-- gRPC server
+|   |   |   |   `-- ...
+|   |   |   `-- log             <-- Concrete implementation of Logger methods
+|   |   |       `-- ...
+|   |   |-- grpc                <-- Auto generated gRPC codes
+|   |   |   `-- translator
+|   |   |       |-- translator.proto    <-- gRPC service definition
+|   |   |       `-- ...
+|   |   |-- initializer.go      <-- App initializer func
+|   |   `-- util                <-- Codes shared throughout the app
+|   |       |-- config          <-- Config
+|   |       |   |-- config.go
+|   |       |   `-- ...
+|   |       |-- di              <-- DI
+|   |       |   |-- container   <-- Concrete implementation of DI methods
+|   |       |   |   |-- dev
+|   |       |   |   `-- ...
+|   |       |   |-- di.go
+|   |       |   `-- ...
+|   |       `-- log             <-- Logging
+|   |           |-- log.go
+|   |           `-- ...
+|   `-- pkg             <-- Codes shared, which are not dependent on the app
+|       `-- util        <-- Helper functions
+|           |-- file.go
+|           |-- http.go
+|           |-- time.go
+|           `-- type.go
+|
+`-- scripts         <-- Scripts for this app
+    |-- local.sh    <-- Script used by Makefile
+    `-- mock.pl     <-- Script to generate go mock file in the same directory
+```
+
+## Get in touch
+
+- [Dev.to](https://dev.to/takakd)
+- [Twitter](https://twitter.com/takakdkd)
+
+## Contributing
+
+Issues and reviews are welcome. Don't hesitate to create issues and PR.
+
+## License
+
+- Copyright 2020 © takakd.
 
-Web application specific components: static web assets, server side templates and SPAs.
 
-## Common Application Directories
 
-### `/configs`
-
-Configuration file templates or default configs.
-
-Put your `confd` or `consul-template` template files here.
-
-### `/init`
-
-System init (systemd, upstart, sysv) and process manager/supervisor (runit, supervisord) configs.
-
-### `/scripts`
-
-Scripts to perform various build, install, analysis, etc operations.
-
-These scripts keep the root level Makefile small and simple (e.g., [`https://github.com/hashicorp/terraform/blob/master/Makefile`](https://github.com/hashicorp/terraform/blob/master/Makefile)).
-
-See the [`/scripts`](scripts/README.md) directory for examples.
-
-### `/build`
-
-Packaging and Continuous Integration.
-
-Put your cloud (AMI), container (Docker), OS (deb, rpm, pkg) package configurations and scripts in the `/build/package` directory.
-
-Put your CI (travis, circle, drone) configurations and scripts in the `/build/ci` directory. Note that some of the CI tools (e.g., Travis CI) are very picky about the location of their config files. Try putting the config files in the `/build/ci` directory linking them to the location where the CI tools expect them (when possible).
-
-### `/deployments`
-
-IaaS, PaaS, system and container orchestration deployment configurations and templates (docker-compose, kubernetes/helm, mesos, terraform, bosh). Note that in some repos (especially apps deployed with kubernetes) this directory is called `/deploy`.
-
-### `/test`
-
-Additional external test apps and test data. Feel free to structure the `/test` directory anyway you want. For bigger projects it makes sense to have a data subdirectory. For example, you can have `/test/data` or `/test/testdata` if you need Go to ignore what's in that directory. Note that Go will also ignore directories or files that begin with "." or "_", so you have more flexibility in terms of how you name your test data directory.
-
-See the [`/test`](test/README.md) directory for examples.
-
-## Other Directories
-
-### `/docs`
-
-Design and user documents (in addition to your godoc generated documentation).
-
-See the [`/docs`](docs/README.md) directory for examples.
-
-### `/tools`
-
-Supporting tools for this project. Note that these tools can import code from the `/pkg` and `/internal` directories.
-
-See the [`/tools`](tools/README.md) directory for examples.
-
-### `/examples`
-
-Examples for your applications and/or public libraries.
-
-See the [`/examples`](examples/README.md) directory for examples.
-
-### `/third_party`
-
-External helper tools, forked code and other 3rd party utilities (e.g., Swagger UI).
-
-### `/githooks`
-
-Git hooks.
-
-### `/assets`
-
-Other assets to go along with your repository (images, logos, etc).
-
-### `/website`
-
-This is the place to put your project's website data if you are not using GitHub pages.
-
-See the [`/website`](website/README.md) directory for examples.
-
-## Directories You Shouldn't Have
-
-### `/src`
-
-Some Go projects do have a `src` folder, but it usually happens when the devs came from the Java world where it's a common pattern. If you can help yourself try not to adopt this Java pattern. You really don't want your Go code or Go projects to look like Java :-)
-
-Don't confuse the project level `/src` directory with the `/src` directory Go uses for its workspaces as described in [`How to Write Go Code`](https://golang.org/doc/code.html). The `$GOPATH` environment variable points to your (current) workspace (by default it points to `$HOME/go` on non-windows systems). This workspace includes the top level `/pkg`, `/bin` and `/src` directories. Your actual project ends up being a sub-directory under `/src`, so if you have the `/src` directory in your project the project path will look like this: `/some/path/to/workspace/src/your_project/src/your_code.go`. Note that with Go 1.11 it's possible to have your project outside of your `GOPATH`, but it still doesn't mean it's a good idea to use this layout pattern.
-
-
-## Badges
-
-* [Go Report Card](https://goreportcard.com/) - It will scan your code with `gofmt`, `go vet`, `gocyclo`, `golint`, `ineffassign`, `license` and `misspell`. Replace `github.com/golang-standards/project-layout` with your project reference.
-
-* ~~[GoDoc](http://godoc.org) - It will provide online version of your GoDoc generated documentation. Change the link to point to your project.~~
-
-* [Pkg.go.dev](https://pkg.go.dev) - Pkg.go.dev is a new destination for Go discovery & docs. You can create a badge using the [badge generation tool](https://pkg.go.dev/badge).
-
-* Release - It will show the latest release number for your project. Change the github link to point to your project.
-
-[![Go Report Card](https://goreportcard.com/badge/github.com/golang-standards/project-layout?style=flat-square)](https://goreportcard.com/report/github.com/golang-standards/project-layout)
-[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/golang-standards/project-layout)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/golang-standards/project-layout)](https://pkg.go.dev/github.com/golang-standards/project-layout)
-[![Release](https://img.shields.io/github/release/golang-standards/project-layout.svg?style=flat-square)](https://github.com/golang-standards/project-layout/releases/latest)
-
-## Notes
-
-A more opinionated project template with sample/reusable configs, scripts and code is a WIP.
