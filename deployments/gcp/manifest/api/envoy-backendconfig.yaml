@@ -1,0 +1,11 @@
+# Ref. https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: envoy-backendconfig
+spec:
+  healthCheck:
+    type: HTTP
+    requestPath: '/health'
+    # GKE sets a pod's port automatically if NEG is used.
+    # port: 9000

@@ -1,0 +1,5 @@
+# If it is applied this manifest, a certificate is created on Certificates in Network services.
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: envoy-cert
