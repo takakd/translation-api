@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: translatorapp
+  labels:
+    app/role: translatorapp-ingress
+  annotations:
+    # Ref. https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.1/guide/ingress/annotations/
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    # Serves API with HTTPS.
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    # Envoy backend listen HTTP because ALB terminates TLS.
+    alb.ingress.kubernetes.io/backend-protocol: 'HTTP'
+    alb.ingress.kubernetes.io/healthcheck-port: '9000'
+    alb.ingress.kubernetes.io/healthcheck-path: '/health'
+    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/healthcheck-protocol: 'HTTP'
+# spec is overwritten by a patch.

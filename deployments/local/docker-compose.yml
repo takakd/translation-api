@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.16.1
+    ports:
+      - "9000:9000"
+      - "9901:9901"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+      - ./server.crt:/app/cert/server.crt
+      - ./server.key:/app/cert/server.key

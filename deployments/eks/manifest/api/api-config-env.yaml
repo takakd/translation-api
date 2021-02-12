@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config-env
+  labels:
+    app/role: api-config
+data:
+  APP_ENV: "prod"
+  DEBUG_LEVEL: "DEBUG"
+  GRPC_PORT: "50051"
+  TLS: "true"
+  SERVER_CERT_FILE_PATH: "/app/certs/server.crt"
+  SERVER_KEY_FILE_PATH: "/app/certs/server.key"
+  GOOGLE_KEY_FILE_PATH: "/app/certs/google.key.json"
+  HEALTH_CHECK_PATH: "/health"

@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  labels:
+    app/role: ingress
+  annotations:
+    # If the class annotation is not specified it defaults to "gce".
+    kubernetes.io/ingress.class: "gce"
+    # Force to use HTTPS
+    kubernetes.io/ingress.allow-http: "false"
+    # Google managed certificate name to associate with Ingress.
+    networking.gke.io/managed-certificates: envoy-cert

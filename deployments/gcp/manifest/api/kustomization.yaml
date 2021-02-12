@@ -1,0 +1,65 @@
+# Ref. https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: translatorapp
+
+commonLabels:
+  app/name: translatorapp
+  app/infra: gce
+  app/env: example
+
+configMapGenerator:
+- name: envoy-configmap
+  namespace: translatorapp
+  options:
+    labels:
+      app/role: envoy-config
+  files:
+  - envoy.yaml=envoy.yaml
+
+secretGenerator:
+- name: api-secrets-env
+  namespace: translatorapp
+  options:
+    labels:
+      app/role: api-secrets-env
+  envs:
+  - secret/.env
+
+- name: api-secrets-file
+  namespace: translatorapp
+  options:
+    labels:
+      app/role: api-secrets-file
+  files:
+  - secret/google.key.json
+  - secret/server.key
+  - secret/server.crt
+
+resources:
+- namespace.yaml
+- api-config-env.yaml
+- api-service.yaml
+- envoy-service.yaml
+- envoy-backendconfig.yaml
+- ingress-cert.yaml
+- ingress.yaml
+
+patches:
+# Overwrite a container image name.
+- path: api-patch.yaml
+  target:
+    kind: Deployment
+    name: api-deployment
+# Overwrite domain properties.
+- path: ingress-cert-patch.yaml
+  target:
+    kind: ManagedCertificate
+# Overwrite ingress properties.
+- path: ingress-patch.yaml
+  target:
+    kind: Ingress
+
+
+

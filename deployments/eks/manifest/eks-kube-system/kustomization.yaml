@@ -1,0 +1,14 @@
+# Ref. https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- alb-rbac-role.yaml
+- alb-ingress-controller.yaml
+
+patches:
+# Overwrite an ingress controller specs.
+- path: alb-ingress-patch.yaml
+  target:
+    kind: Deployment
+    name: alb-ingress-controller

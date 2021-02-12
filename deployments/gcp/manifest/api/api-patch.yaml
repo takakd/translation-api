@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  template:
+    spec:
+      containers:
+        - name: api-pod
+          # e.g. image: HOSTNAME/PROJECT-ID/IMAGE@IMAGE_DIGEST
+          image: asia.gcr.io/translator-123/translatorapp-api:latest
+
