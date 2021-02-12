@@ -28,9 +28,9 @@ var testdata = struct {
 	invalidCert string
 	key         string
 }{
-	cert:        "testdata/server.crt",
+	cert:        "testdata/server.example.crt",
 	invalidCert: "testdata/server.invalid.crt",
-	key:         "testdata/server.key",
+	key:         "testdata/server.example.key",
 }
 
 func TestNewServer(t *testing.T) {
