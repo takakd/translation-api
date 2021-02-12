@@ -21,49 +21,45 @@
 
 ## Setup
 
+### Create AWS and GCP account
+
+This API uses AWS IAM and GCP service account to use each translation API.
+
+For instructions on how to create an AWS account, see [Creating an IAM user in your AWS account
+](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
+
+For a GCP account, see [Creating and managing service accounts](https://cloud.google.com/iam/docs/creating-managing-service-accounts).
+
+### Prepare a TLS certificate
+
+Create a server key file and TLS certificate if an API used TLS.
+
+e.g., Self-signed certificate
+
+```
+$ cd manifest/api/secret
+$ openssl genrsa -aes256 -passout pass:gsahdg -out server.pass.key 4096
+$ openssl rsa -passin pass:gsahdg -in server.pass.key -out server.key
+$ rm server.pass.key
+$ openssl req -new -key server.key -out server.csr
+...
+$ openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt
+```
+
+Ref. [Generate private key and certificate signing request](https://devcenter.heroku.com/articles/ssl-certificate-self)
+
 ### Set environment variables
 
-Set each environment variable to each Lambda function the following.
+Need Several environment variables.
 
-Key | Value | e.g.
----- | ---- | ---
-DEBUG_LEVEL | Log level. Set `DEBUG` or `INFO` | DEBUG
-GRPC_PORT | API port number |  50051
-AWS_ACCESS_KEY_ID | AWS AccessKeyID to use Amazon Translate | AKI...
-AWS_SECRET_ACCESS_KEY | AWS SecretAccessKey to use Amazon Translate | 4pfWR38...
-AWS_REGION | AWS region to use Amazon Translate | ap-northeast-1
-GOOGLE_PROJECT_ID | GOOGLE projectID to use Google Translation API | translator-123456
-GOOGLE_API_KEY | GOOGLE service account credential JSON use Google Translation API |  {  "type": "service_account",  "project_id": "example",  "private_key_id": "0000000000" ... }
+For details, see [.env.example](deployments/local/.env.example).
 
-See also [.env.example](cmd/api/.env.example).
+### Deployment
 
-## Usage
+Several examples are here.
 
-Run gRPC server.
-
-```
-$ ./cmd/api/api
-```
-
-### Use .env file
-
-Set `ENV_FILE` to use .env file.
-
-```
-$ ENV_FILE=/some/where/.env ./cmd/api/api
-```
-
-## Example
-
-### Run on Kubernets service.
-
-- [AWS EKS]()
-- [Google GKE]()
-
-### Translation application with this API.
-
-- []
-
+* [AWS EKS](deployments/eks/README.md)
+* [GCP GKE](deployments/gke/README.md)
 
 ## Development
 
@@ -71,29 +67,41 @@ $ ENV_FILE=/some/where/.env ./cmd/api/api
 
 - Golang
 - gRPC
+- Kubernetes
+
+### Requirements
+
+- Golang: 1.14.4 darwin/amd64
+- Docker: 20.10.2
+- AWS IAM credentials, which can use Amazon Translate.
+- Google service account, which can use Google Translation API.
+
+We tested in the above environment.
 
 ### Setup
 
 1. Install Golang by following [Download and install](https://golang.org/doc/install).
 2. Run `go mod vendor` to get modules.
 
-#### Requirements
+### Helper command
 
-- go version go1.14.4 darwin/amd64
-- AWS IAM credentials that can use Amazon Translate.
-- Google service account that can use Google Translation API.
+#### make
 
-### Command
+**Build**
 
-**Testing**
+```
+$ make build
+```
 
-Run test With details: "-v" and "-cover"
+**go test**
+
+Run test with details: "-v" and "-cover"
 
 ```
 $ make test
 ```
 
-**Formatting codes**
+**Format sources**
 
 Run "go fmt", "goimports", and "go lint".
 
@@ -101,18 +109,28 @@ Run "go fmt", "goimports", and "go lint".
 $ make fmt
 ```
 
-**Run**
+#### On local 
 
-Run on local, use `cmd/api/.env.local` if it exists.
+```sh
+$ ./scripts/local.sh
+Usage:
+  ./scripts/local.sh Command
 
-```
-$ make run
+Example.
+  ./scripts/local.sh build
+
+Command:
+  run           Run envoy and gRPC server on local.
+  run:go        Run gRPC server on local.
+  run:envoy     Run envoy on local.
+  down:envoy    Stop envoy on local.
+  grpc          Generate gRPC codes.
 ```
 
 ### Structure
 
 - Directory structure refers to [golang-standards/project-layout](https://github.com/golang-standards/project-layout).
-- Serve gRPC API with envoy where the client apps requests.
+- API services a translation service with gRPC.
 
 #### Design
 
@@ -133,27 +151,23 @@ $ make run
 |       `-- api.go          <-- main func
 |
 |-- deployments
-|   `-- envoy                   <-- Envoy config directory
-|       |-- docker-compose.yml  <-- docker-compose config for local
-|       `-- envoy.yaml          <-- Envoy config
-|
-|-- docs
-|   `-- logo.svg
-|-- go.mod      <-- go module list
-|-- go.sum      <-- go module hash list
+|   |-- docker-image            <-- Working directory for a container image
+|   |-- eks                     <-- EKS deployment examples
+|   |-- gcp                     <-- GKE deployment examples
+|   `-- local                   <-- Example running on local
 |
 |-- internal
-|   |-- app                     <-- This app directory
+|   |-- app                     <-- This api directory
 |   |   |-- controller          <-- Controller layer
 |   |   |   `-- translator      <-- gRPC handler
 |   |   |       `-- ...
 |   |   |-- driver              <-- Driver layer
-|   |   |   |-- aws             <-- Codes related to handle AWS translate service
+|   |   |   |-- aws             <-- Codes related to handling AWS translate service
 |   |   |   |   `-- ...
 |   |   |   |-- config          <-- Concrete implementation of Config methods
 |   |   |   |   `-- ...
 |   |   |   |
-|   |   |   |-- google          <-- Codes related to handle Google Translation API.
+|   |   |   |-- google          <-- Codes related to handling Google Translation API.
 |   |   |   |   `-- ...
 |   |   |   |-- grpcserver      <-- gRPC server
 |   |   |   |   `-- ...
@@ -184,9 +198,11 @@ $ make run
 |           |-- time.go
 |           `-- type.go
 |
-`-- scripts         <-- Scripts for this app
-    |-- local.sh    <-- Script used by Makefile
-    `-- mock.pl     <-- Script to generate go mock file in the same directory
+`-- scripts             <-- Scripts for this app
+    |-- buildimage.sh   <-- For building container image
+    |-- local.sh        <-- For local running
+    |-- makefile.sh     <-- For Makefile
+    `-- mock.pl         <-- To generate go mock file in the same directory
 ```
 
 ## Get in touch
