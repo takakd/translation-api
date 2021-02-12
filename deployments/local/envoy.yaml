@@ -61,11 +61,11 @@ static_resources:
                     address: host.docker.internal
                     #address: 0.0.0.0
 #TLS
-    http2_protocol_options: {}
-    transport_socket:
-      name: envoy.transport_sockets.tls
-      typed_config:
-        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+#    http2_protocol_options: {}
+#    transport_socket:
+#      name: envoy.transport_sockets.tls
+#      typed_config:
+#        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
 
 admin:
   access_log_path: /tmp/admin_access.log

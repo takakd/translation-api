@@ -20,7 +20,7 @@ Command:
   run           Run envoy and gRPC server on local.
   run:go        Run gRPC server on local.
   run:envoy     Run envoy on local.
-  stop:envoy    Stop envoy on local.
+  down:envoy    Stop envoy on local.
   grpc          Generate gRPC codes.
 _EOT_
 exit 1
@@ -40,7 +40,7 @@ run() {
 run_go() {
     echo Run go cmd.
     cd "${SCRIPT_DIR}/../cmd/api" || exit
-    APP_ENV=local ENV_FILE="${SCRIPT_DIR}/../cmd/api/.env.local" go run ./api.go
+    APP_ENV=local ENV_FILE="${SCRIPT_DIR}/../deployments/local/.env" go run ./api.go
 }
 
 proxy_envoy_run() {
@@ -78,11 +78,14 @@ fi
 
 if [[ $1 = "run" ]]; then
     run
+elif [[ $1 = "run" ]]; then
+    proxy_envoy_run
+    run_go
 elif [[ $1 = "run:go" ]]; then
     run_go
 elif [[ $1 = "run:envoy" ]]; then
     proxy_envoy_run
-elif [[ $1 = "stop:envoy" ]]; then
+elif [[ $1 = "down:envoy" ]]; then
     proxy_envoy_down
 elif [[ $1 = "grpc" ]]; then
     grpc
