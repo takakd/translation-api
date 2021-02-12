@@ -1,22 +1,19 @@
-# Deployment to GCP GKE
+# Deployment to GKE
 
-This document describes how to deploy to GCP.
+This document describes how to deploy to GKE.
 
 ## Requirement
 
 * Kuberntes and GCP knowledge
+* AWS account, which can use Amazon Translate.
+* GCP account, which can use GKE, GCR, Networking Service, and Translation API.
 * Google Cloud SDK: 327.0.0, bq 2.0.64, core 2021.02.05, gsutil 4.58
-* AWS account, that can use EKS and ECR
-* GCP account, that can use Translation API.
-* Docker: version 20.10.2
+* Docker: 20.10.2
 * kubectl: GitVersion v1.19.3
-* GCP account, that can use GKE.
 * kustomize: v3.10.0 
 * macOS 10.15.x
 
-Tested in the above environment.
-
-Ref. [Setting up a local shell](https://cloud.google.com/container-registry/docs/quickstart#local-shell)
+We tested in the above environment.
 
 ## Design
 
@@ -24,43 +21,71 @@ TODO
 
 ## Step
 
-**The description is written under the following settings, please change the values as your environment.**
+**This description is written under the following settings. Change the values as your environment.**
 
 * GCP region: asia-northeast1-c
 * GCR region: asia.gcr.io
-* GCP Project ID translator-123
+* GCP ProjectID: translator-123
 * GCR repository name: translatorapp-api 
 * GKE cluster name: translatorapp-cluster
 * GCP virtual global IP name: api-example-com-vip
 
-### 1. Push docker image
+### 1. Push docker image to GCR
 
 Configure the request to GCR.
-
-Ref. [Configure authentication](https://cloud.google.com/container-registry/docs/quickstart)
 
 ```sh
 $ gcloud auth configure-docker
 ```
 
-
-@TODO
+Ref. [Configure authentication](https://cloud.google.com/container-registry/docs/quickstart)
 
 Build docker image.
 
 ```sh
-$ ../../scripts/buildimage.sh 123456.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api
+$ <this repository root>/scripts/buildimage.sh asia.gcr.io/translator-123/translatorapp-api
 ```
 
 Push the image.
 
 ```sh
-$ docker push 123456.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api
+$ docker push asia.gcr.io/translator-123/translatorapp-api
 ```
 
-### 2. Deploy to GKE
+### 2. Prepare secrets.
 
-Create cluster.
+First, create a GCP service account to use Google Translation API, then save its certificate JSON as `manifest/api/secret/google.key.json`. 
+
+Ref. [Creating and managing service account keys
+](https://cloud.google.com/iam/docs/creating-managing-service-account-keys)
+
+Generate a self-certified certification as `server.key` and `server.crt` in `manifest/api/secret`.
+
+```
+$ cd manifest/api/secret
+$ openssl genrsa -aes256 -passout pass:gsahdg -out server.pass.key 4096
+$ openssl rsa -passin pass:gsahdg -in server.pass.key -out server.key
+$ rm server.pass.key
+$ openssl req -new -key server.key -out server.csr
+...
+$ openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt
+```
+
+Ref. [Generate private key and certificate signing request](https://devcenter.heroku.com/articles/ssl-certificate-self)
+
+
+Add some secret values in `/manifest/api/secret/.env`.
+
+```
+AWS_ACCESS_KEY_ID=AK...         #<-- Add IAM Access Key ID
+AWS_SECRET_ACCESS_KEY=XU...     #<-- Add IAM Secret Access Key
+AWS_REGION=ap-northeast-1       #<-- Add IAM Region
+GOOGLE_PROJECT_ID=...           #<-- Add GCP ProjectID where the GCP service account is.
+```
+
+### 3. Deploy to GKE
+
+Create an GKE cluster.
 
 ```sh
 $ gcloud container clusters create translatorapp-cluster \
@@ -81,10 +106,10 @@ NAME                   LOCATION           MASTER_VERSION    MASTER_IP      MACHI
 translatorapp-cluster  asia-northeast1-c  1.17.14-gke.1600  xxx.xxx.xxx.xxx  e2-medium     1.17.14-gke.1600  1          RUNNING
 ```
 
-Ref. [VPC ネイティブ クラスタを作成する](https://cloud.google.com/kubernetes-engine/docs/how-to/standalone-neg#create_a_vpc-native_cluster)
+Ref. [Create a VPC-native cluster](https://cloud.google.com/kubernetes-engine/docs/how-to/standalone-neg#create_a_vpc-native_cluster)
 
 
-Create global IP.
+Create a global virtual IP.
 
 ```
 gcloud compute addresses create api-example-com-vip \
@@ -106,7 +131,7 @@ $ kubectl config current-context
 gke_translator-123_asia-northeast1-c_translatorapp-cluster
 ```
 
-Add GCR image ARN in `manifest/api/api-patch.yaml`.
+Add GCR image name in `manifest/api/api-patch.yaml`.
 
 ```yaml
 apiVersion: apps/v1
@@ -135,7 +160,7 @@ spec:
     - api.example.com
 ```
 
-Add the static ip name and the domain name in `manifest/api/ingress-patch.yaml`.
+Add the global virtual IP name and the domain name in `manifest/api/ingress-patch.yaml`.
 
 ```yaml
 apiVersion: networking.k8s.io/v1beta1
@@ -157,8 +182,7 @@ spec:
           servicePort: 9000```
 ```
 
-
-Apply.
+Apply to the cluster.
 
 ```sh
 $ cd manifest/api
@@ -167,7 +191,7 @@ $ kustomize build . | kubectl apply -f -
 
 ### 5. Setup DNS
 
-Add DNS record to route the domain to the global IP created Step 2. To see IP, run the following command:
+Add DNS record to route the domain to the global virtual IP created Step 2. To see it, run the following command:
 
 ```
 $ gcloud compute addresses list
@@ -179,9 +203,10 @@ After a while, the certificate will be approved and you will be able to access i
 
 ### 6. Clean up
 
-Delete components.
+Delete all components.
 
 ```
+$ cd manifest/api
 $ kustomize build . | kubectl delete -f -
 ```
 
@@ -197,76 +222,25 @@ Do you want to continue (Y/n)?  y
 Deleting cluster translatorapp-cluster...⠶    
 ```
 
-
----------
-Old
-
-
-## Kubernetes components
-
-### apisecrets.yaml
-
-The secrets for the app uses AWS and Google API. Set each value to your environment.
-
-See [Environment variables]() for details.
-
-**GOOGLE_API_KEY**
-
-Set credential JSON as string to GOOGLE_API_KEY. The below command output value to set.
-
-```shell
-$ cat <GOOGLE_APPLICATION_CREDENTIALS key.json> | tr -d '\n' | base64
-```
-
-Ref.
-https://kubernetes.io/docs/concepts/configuration/secret/
-
-### apiservice.yaml
-
-Service and Deployment of the app, which serves API with gRPC on port 50051.
-
-Set container image name in the deployment containers section.
-
-**Environment variables**
-
-set DEBUG_LEVEL.
-
-See [Environment variables]() for details.
-
-### envoyconfigmap.yaml
-
-This config map defines config.yaml in which envoy service.
-
-### envoyservcie.yaml
-
-Service and Deployment of envoy, which dispatch requests as the load balancer. Port 80 is connected to port 50051 on the gRPC server and port 9901 is connected envoy admin view.
-
-### namespace.yaml
-
-Defines the app's namespace.
-
+**Sometimes some resources are still active, so check GCP console page to see whether all resources are deleted.**
 
 ## Ref.
-
-
-[grpc-web/envoy.yaml at master · grpc/grpc-web](https://github.com/grpc/grpc-web/blob/master/net/grpc/gateway/examples/echo/envoy.yaml)
-
-[Deploying a containerized web application](https://cloud.google.com/kubernetes-engine/docs/tutorials/hello-app)
-
-[Envoy で HTTPS 接続をする設定を学べる「Securing traffic with HTTPS and SSL/TLS」を試した](https://kakakakakku.hatenablog.com/entry/2019/12/06/143207)
-
-[HTTP(S) 負荷分散用 GKE Ingress](https://cloud.google.com/kubernetes-engine/docs/concepts/ingress)
-[Ingress 機能の構成](https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features)
-[ヘルスチェックの概要
-](https://cloud.google.com/load-balancing/docs/health-check-concepts)
-[Envoy プロキシを使用して GKE 上で gRPC サービスの負荷分散を行う](https://cloud.google.com/solutions/exposing-grpc-services-on-gke-using-envoy-proxy)
-[gRPC & HTTP servers on GKE Ingress failing healthcheck for gRPC backend
-](https://stackoverflow.com/questions/56277949/grpc-http-servers-on-gke-ingress-failing-healthcheck-for-grpc-backend)
-
-
-
-
-
-
-@TODO: 未整理
-https://cloud.google.com/kubernetes-engine/docs/how-to/load-balance-ingress?hl=ja
+- GCP
+    - [Deploying a containerized web application](https://cloud.google.com/kubernetes-engine/docs/tutorials/hello-app)
+    - [GKE Ingress for HTTP(S) Load Balancing](https://cloud.google.com/kubernetes-engine/docs/concepts/ingress)
+    - [Configuring Ingress features](https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features)
+    - [Health checks overview](https://cloud.google.com/load-balancing/docs/health-check-concepts)
+    - [Using Envoy Proxy to load-balance gRPC services on GKE](https://cloud.google.com/solutions/exposing-grpc-services-on-gke-using-envoy-proxy)
+    - [gRPC & HTTP servers on GKE Ingress failing healthcheck for gRPC backend
+    ](https://stackoverflow.com/questions/56277949/grpc-http-servers-on-gke-ingress-failing-healthcheck-for-grpc-backend)
+- Others
+    - [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/)
+    - [grpc-web/envoy.yaml at master · grpc/grpc-web](https://github.com/grpc/grpc-web/blob/master/net/grpc/gateway/examples/echo/envoy.yaml)
+    - [How to configure HTTPS backends in envoy](https://farcaller.medium.com/how-to-configure-https-backends-in-envoy-b446727b2eb3)
+    - [Simple SSL Termination with Envoy](https://timburks.me/2019/12/06/simple-ssl-termination-with-envoy)
+    - [HTTP/2 Adventure in the Go World](https://posener.github.io/http2/)
+    - [Introduction to HTTP/2](https://developers.google.com/web/fundamentals/performance/http2)
+    - [Envoy Proxy Configuration](https://docs.build.security/docs/envoy)
+    - [Envoy で HTTPS 接続をする設定を学べる「Securing traffic with HTTPS and SSL/TLS」を試した](https://kakakakakku.hatenablog.com/entry/2019/12/06/143207)
+    
+    

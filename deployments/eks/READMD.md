@@ -4,16 +4,16 @@ This document describes how to deploy to EKS.
 
 ## Requirement
 
-* Kuberntes and AWS knowledge
+* Kubernetes and AWS knowledge
+* AWS account, which can use EKS, ECR and Amazon Translate.
+* GCP account, which can use Translation API.
 * AWS CLI: 2.1.22
-* AWS account, that can use EKS and ECR
-* GCP account, that can use Translation API.
-* Docker: version 20.10.2
+* Docker: 20.10.2
 * kubectl: GitVersion v1.19.3
 * kustomize: v3.10.0 
-* macOS 10.15.x
+* macOS: 10.15.x
 
-Tested in the above environment.
+We tested in the above environment.
 
 ## Design
 
@@ -21,14 +21,16 @@ TODO
 
 ## Step
 
-**The description is written under the following settings, please change the values as your environment.**
+**This description is written under the following settings. Change the values as your environment.**
 
 * AWS region: ap-northeast-1
 * AWS account: 123456
 * ECR repository name: translatorapp-api 
-* Domain is api.exapmle.com
+* Domain is api.example.com
 
-### 1. Create ECR repository
+### 1. Push docker image to ECR
+
+Create an ECR repository.
 
 ```sh
 $ aws ecr create-repository --repository-name translatorapp-api --region ap-northeast-1
@@ -38,8 +40,6 @@ $ aws ecr create-repository --repository-name translatorapp-api --region ap-nort
         "repositoryArn": "arn:aws:ecr:ap-northeast-1:123456:repository/translatorapp-api",
         ...
 ```
-       
-### 2. Push docker image to ECR
 
 Logged in ECR.
 
@@ -47,12 +47,10 @@ Logged in ECR.
 $ aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 123456.dkr.ecr.ap-northeast-1.amazonaws.com
 ```
 
-@TODO
-
 Build docker image.
 
 ```sh
-$ ../../scripts/buildimage.sh 123456.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api
+$ <this repository root>/scripts/buildimage.sh 123456.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api
 ```
 
 Push the image.
@@ -61,17 +59,18 @@ Push the image.
 $ docker push 123456.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api   
 ```
 
-### 3. Create ACM
+### 2. Create ACM
 
 Create a certificate by ACM, which an ALB uses.
 
-Ref. 
+For instruction on how to create, see the following resources: [Issuing and Managing Certificates](https://docs.aws.amazon.com/acm/latest/userguide/gs.html)
 
-### 4. Prepare secrets.
+### 3. Prepare secrets.
 
-First create GCP service account to use Google Translation API, then save GCP service account certificate JSON as `manifest/api/secret/google.key.json`. 
+First, create a GCP service account to use Google Translation API, then save its certificate JSON as `manifest/api/secret/google.key.json`. 
 
-Ref. 
+Ref. [Creating and managing service account keys
+](https://cloud.google.com/iam/docs/creating-managing-service-account-keys)
 
 Generate a self-certified certification as `server.key` and `server.crt` in `manifest/api/secret`.
 
@@ -87,8 +86,7 @@ $ openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out se
 
 Ref. [Generate private key and certificate signing request](https://devcenter.heroku.com/articles/ssl-certificate-self)
 
-
-Add some secret keys in `/manifest/api/secret/.env`.
+Add some secret values in `/manifest/api/secret/.env`.
 
 ```
 AWS_ACCESS_KEY_ID=AK...         #<-- Add IAM Access Key ID
@@ -97,9 +95,9 @@ AWS_REGION=ap-northeast-1       #<-- Add IAM Region
 GOOGLE_PROJECT_ID=...           #<-- Add GCP ProjectID where the GCP service account is.
 ```
 
-### 5. Deploy to EKS
+### 4. Deploy to EKS
 
-Create EKS cluster.
+Create an EKS cluster.
 
 ```sh
 $ eksctl create cluster -f cluster.yaml
@@ -133,7 +131,7 @@ $ aws eks --region ap-northeast-1 update-kubeconfig --name translatorapp-cluster
 
 Create a service account.
 
-**Set policy Arn to --attach-policy-arn option.**
+*Set policy Arn to --attach-policy-arn option.*
 
 ```sh
 $ eksctl create iamserviceaccount \
@@ -160,7 +158,7 @@ spec:
           - --aws-vpc-id=<Cluster VPC ID>   #<-- Add the VPC ID 
 ```
 
-Apply.
+Apply to the cluster.
 
 ```sh
 $ cd manifest/eks-kube-system
@@ -207,7 +205,7 @@ spec:
 
 ```
 
-Apply.
+Apply to the cluster.
 
 ```sh
 $ cd manifest/api
@@ -216,36 +214,55 @@ $ kustomize build . | kubectl apply -f -
 
 ### 5. Setup DNS
 
-Add DNS record to route the domain to ALB CNAME. To see ALB CNAME, run the following command:
+Add DNS record to route the domain to ALB CNAME.
+
+To see ALB CNAME, run the following command:
 
 ```
 $ kubectl get ingress -n translatorapp
 ```
 
-The command output should have the load balancer's fully qualified domain name (FQDN).
+*The command output should have the load balancer's fully qualified domain name (FQDN).*
 
-## Check
+### 6. Check
 
-If some issues are, run the following commands:
+If some issues are, run the following command.:
 
 ```sh
 $ kubectl logs your-alb-ingress-controller -n kube-system
 ```
 
+### 7. Clean up
+
+Delete all components.
+
+```
+$ cd manifest/api
+$ kustomize build . | kubectl delete -f -
+
+$ cd ../eks-kube-system
+$ kustomize build . | kubectl delete -f -
+```
+
+Delete EKS cluster.
+
+```
+$ eksctl delete cluster -f cluster.yaml
+```
+
+**Sometimes some resources are still active, so check AWS console page to see whether all resources are deleted.**
+
 ## Ref. 
-**[Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/)**
-
-- [TLS](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/security/ssl)
-- [Securing Envoy](https://www.envoyproxy.io/docs/envoy/latest/start/quick-start/securing)
-- [extensions.transport_sockets.tls.v3.UpstreamTlsContext](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/transport_sockets/tls/v3/tls.proto#extensions-transport-sockets-tls-v3-upstreamtlscontext)
-- [How do I configure SNI for listeners?](https://www.envoyproxy.io/docs/envoy/latest/faq/configuration/sni#how-do-i-configure-sni-for-listeners)
-
-**Others**
-- [Ingress annotations](https://kubernetes-sigs.github.io/aws-load-balancer-controller/guide/ingress/annotations/#ingress-annotations)
-- [How to configure HTTPS backends in envoy](https://farcaller.medium.com/how-to-configure-https-backends-in-envoy-b446727b2eb3)
-- [Simple SSL Termination with Envoy](https://timburks.me/2019/12/06/simple-ssl-termination-with-envoy)
-- [New – Application Load Balancer Support for End-to-End HTTP/2 and gRPC](https://aws.amazon.com/jp/blogs/aws/new-application-load-balancer-support-for-end-to-end-http-2-and-grpc/)
-- [HTTP/2 Adventure in the Go World](https://posener.github.io/http2/)
-- [Introduction to HTTP/2](https://developers.google.com/web/fundamentals/performance/http2)
-- [Envoy Proxy Configuration](https://docs.build.security/docs/envoy)
-- [ALBでgRPCを使う際にターゲット側もTLSしてみた](https://dev.classmethod.jp/articles/alb-e2e-tls/)
+- AWS
+    - [Ingress annotations](https://kubernetes-sigs.github.io/aws-load-balancer-controller/guide/ingress/annotations/#ingress-annotations)
+    - [New – Application Load Balancer Support for End-to-End HTTP/2 and gRPC](https://aws.amazon.com/jp/blogs/aws/new-application-load-balancer-support-for-end-to-end-http-2-and-grpc/)
+    - [ALBでgRPCを使う際にターゲット側もTLSしてみた](https://dev.classmethod.jp/articles/alb-e2e-tls/)
+- Others
+    - [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/)
+    - [grpc-web/envoy.yaml at master · grpc/grpc-web](https://github.com/grpc/grpc-web/blob/master/net/grpc/gateway/examples/echo/envoy.yaml)
+    - [Envoy で HTTPS 接続をする設定を学べる「Securing traffic with HTTPS and SSL/TLS」を試した](https://kakakakakku.hatenablog.com/entry/2019/12/06/143207)
+    - [How to configure HTTPS backends in envoy](https://farcaller.medium.com/how-to-configure-https-backends-in-envoy-b446727b2eb3)
+    - [Simple SSL Termination with Envoy](https://timburks.me/2019/12/06/simple-ssl-termination-with-envoy)
+    - [HTTP/2 Adventure in the Go World](https://posener.github.io/http2/)
+    - [Introduction to HTTP/2](https://developers.google.com/web/fundamentals/performance/http2)
+    - [Envoy Proxy Configuration](https://docs.build.security/docs/envoy)    
