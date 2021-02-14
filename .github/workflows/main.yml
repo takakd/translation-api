@@ -19,3 +19,5 @@ jobs:
     - run: make fmt
     - run: make test
     - run: make build
+
+    - run: ./scripts/buildimage.sh ${{ secrets.DOCKER_IMAGE_NAME }}
