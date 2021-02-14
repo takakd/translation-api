@@ -1,14 +1,12 @@
-name: Go
-
 # Ref. https://docs.github.com/en/actions/guides/deploying-to-google-kubernetes-engine
+name: Deply to GKE
 
 on:
   push:
     branches: [ gke ]
 
 jobs:
-
-  build:
+  deploy:
     env:
       GKE_PROJECT_ID: ${{ secrets.GKE_PROJECT_ID }}
       GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
@@ -19,6 +17,7 @@ jobs:
       KUBE_DIR: ./deployments/prod-gke
 
     runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v2
 
@@ -28,6 +27,7 @@ jobs:
         go-version: 1.15
       
     - run: make fmt
+
     - run: make test
 
     # Setup gcloud CLI
@@ -41,24 +41,19 @@ jobs:
         gcloud --quiet auth configure-docker
 
     # Get the GKE credentials so we can deploy to the cluster
-    - uses: google-github-actions/get-gke-credentials@v0.2.1
+    - name: Get the GKE credentials
+      uses: google-github-actions/get-gke-credentials@v0.2.1
       with:
         cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_ZONE }}
         credentials: ${{ secrets.GKE_SA_KEY }}
 
     # Build the Docker image
-    - name: Build
+    - name: Build the Docker image
       run: ./scripts/buildimage.sh asia.gcr.io/$GKE_PROJECT_ID/$IMAGE:$GITHUB_SHA
-#      run: |-
-#        docker build \
-#          --tag "gcr.io/$GKE_PROJECT_ID/$IMAGE:$GITHUB_SHA" \
-#          --build-arg GITHUB_SHA="$GITHUB_SHA" \
-#          --build-arg GITHUB_REF="$GITHUB_REF" \
-#          .
 
     # Push the Docker image to Google Container Registry
-    - name: Publish
+    - name: Push the Docker image
       run: |-
         docker push "asia.gcr.io/$GKE_PROJECT_ID/$IMAGE:$GITHUB_SHA"
 
@@ -69,7 +64,7 @@ jobs:
         chmod u+x $KUBE_DIR/kustomize
 
     # Deploy the Docker image to the GKE cluster
-    - name: Deploy
+    - name: Apply to GKE
       run: |-
         cd $KUBE_DIR
         ./kustomize edit set image asia.gcr.io/GKE_PROJECT_ID/IMAGE=asia.gcr.io/$GKE_PROJECT_ID/$IMAGE:$GITHUB_SHA
