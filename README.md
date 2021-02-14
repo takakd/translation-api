@@ -58,8 +58,8 @@ For details, see [.env.example](deployments/local/.env.example).
 
 Several examples are here.
 
-* [AWS EKS](deployments/eks/README.md)
-* [GCP GKE](deployments/gke/README.md)
+* [AWS EKS](deployments/aws/README.md)
+* [GCP GKE](deployments/gcp/README.md)
 
 ## Development
 
