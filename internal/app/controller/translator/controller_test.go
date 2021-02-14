@@ -273,9 +273,6 @@ func TestController_Translate(t *testing.T) {
 
 			ml := log.NewMockLogger(ctrl)
 
-			// TODO: check requestID
-			ml.EXPECT().Info(gomock.Any(), gomock.Any())
-
 			ml.EXPECT().Info(gomock.Any(), gomock.Any())
 			log.SetLogger(ml)
 
