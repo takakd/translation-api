@@ -1,6 +1,6 @@
 # Deployment to GKE
 
-This document describes how to deploy to GKE.
+This document describes how to deploy to GCP GKE.
 
 ## Requirement
 
