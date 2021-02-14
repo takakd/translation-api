@@ -119,13 +119,14 @@ func (c *Controller) Translate(ctx context.Context, r *translator.TranslateReque
 	defer cancel()
 
 	// TODO: check requestID
-	log.Info(appCtx, log.StringValue(""))
+	log.Info(appCtx, log.StringValue("check requestID"))
 
 	// Access log
 	now := time.Now()
 	log.Info(appCtx, log.Value{
 		"request": r,
 		"date":    now.Format(time.RFC3339),
+		"tag":     "controller.Translate",
 	})
 
 	// Prepare result
