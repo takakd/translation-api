@@ -114,12 +114,9 @@ func (c *Controller) TranslateParallel(ctx context.Context, ch chan<- *Translate
 
 // Translate processes a method of Translator gRPC service.
 func (c *Controller) Translate(ctx context.Context, r *translator.TranslateRequest) (*translator.TranslateResponse, error) {
-	//appCtx := log.WithLogContextValue(ctx, uuid.New().String())
+	// NOTE: grpcserver.Server already sets a request ID in ServeHTTP method.
 	appCtx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
-
-	// TODO: check requestID
-	log.Info(appCtx, log.StringValue("check requestID"))
 
 	// Access log
 	now := time.Now()

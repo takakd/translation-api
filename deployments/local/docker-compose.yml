@@ -7,5 +7,5 @@ services:
       - "9901:9901"
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
-      - ./server.crt:/app/cert/server.crt
-      - ./server.key:/app/cert/server.key
+      - ./secret/server.crt:/app/cert/server.crt
+      - ./secret/server.key:/app/cert/server.key
