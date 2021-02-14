@@ -94,6 +94,7 @@ $ gcloud container clusters create translatorapp-cluster \
     --create-subnetwork="" \
     --network=default \
     --zone=asia-northeast1-c
+    --machine-type=e2-small
 
 ...
 

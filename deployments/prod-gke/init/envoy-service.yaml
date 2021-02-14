@@ -7,7 +7,7 @@ metadata:
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
     # Ref. https://cloud.google.com/kubernetes-engine/docs/concepts/ingress-xlb#https_tls_between_load_balancer_and_your_application
-    cloud.google.com/app-protocols: '{"envoy-svc-port":"HTTPS"}'
+    cloud.google.com/app-protocols: '{"envoy-svc-port":"HTTP"}'
     cloud.google.com/backend-config: '{"ports": {"envoy-svc-port":"envoy-backendconfig"}}'
 spec:
   # Use ClusterIP if NEG is used.
@@ -45,12 +45,12 @@ spec:
             - containerPort: 9000
               protocol: TCP
           volumeMounts:
-            - name: config
+            - name: envoy-yaml
               mountPath: /etc/envoy
             - name: secrets
               mountPath: /app/certs
       volumes:
-        - name: config
+        - name: envoy-yaml
           configMap:
             name: envoy-config-file
         - name: secrets
