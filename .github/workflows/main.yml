@@ -1,5 +1,5 @@
 # Ref. https://docs.github.com/en/actions/guides/deploying-to-google-kubernetes-engine
-name: Deply to GKE
+name: Deploy
 
 on:
   push:
