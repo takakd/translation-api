@@ -7,6 +7,6 @@ spec:
     spec:
       containers:
         - name: api-pod
-          # Set ECR image name
+          # Set an ECR image name
           # e.g. image: <AWS account>.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api:latest
           image: 123456.dkr.ecr.ap-northeast-1.amazonaws.com/translatorapp-api:latest

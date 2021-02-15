@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Helper scripts for developing
+# Helper scripts for development
 #
 
 SCRIPT_DIR=$(cd $(dirname "$0"); pwd)
@@ -11,19 +11,19 @@ ARGC=$#
 function usage() {
 cat <<_EOT_
 Usage:
-  $0 Command
+  $0 command
 
 Example.
   $0 build
 
-Command:
+command:
   run           Run envoy and gRPC server on local.
   run:go        Run gRPC server on local.
   run:envoy     Run envoy on local.
   down:envoy    Stop envoy on local.
   grpc          Generate gRPC codes.
 _EOT_
-exit 1
+exit 0
 }
 
 run() {
@@ -58,8 +58,7 @@ grpc() {
     #   https://grpc.io/docs/languages/go/quickstart/#regenerate-grpc-code
     #   https://developers.google.com/protocol-buffers/docs/reference/go-generated#invocation
 
-    # Generate Go codes
-    #   translator
+    # Generate Go codes with proto
     mkdir -p ${SCRIPT_DIR}/../internal/app/grpc/translator
     protoc \
         --proto_path=${SCRIPT_DIR}/../api/grpc/translator \

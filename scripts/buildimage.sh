@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Build docker image script
+# Build a docker image script
 #
 
 SCRIPT_DIR=$(cd $(dirname "$0"); pwd)
@@ -10,32 +10,32 @@ ARGC=$#
 
 function usage() {
 cat <<_EOT_
+Build a docker image
+
 Usage:
-  $0 [image tag]
+  $0 imagetag
 
 Example.
   $0 com.example.mydockerimage:latest
 _EOT_
-exit 1
+exit 0
 }
 
-
-# Check parameters
+# Validate parameters
 if [[ $# -lt 1 || "$1" == "" ]]; then
     usage
 fi
 
-# Start to build image
 DOCKER_DIR=${SCRIPT_DIR}/../deployments/docker-image
 DOCKER_API_SRC_DIR=${DOCKER_DIR}/api/src
 
-#   Clean up
+# Clean up working files
 rm -rf "$DOCKER_API_SRC_DIR"
 
-#   Move to git repo-root to get files by ls-files.
+# Move to git repo-root to get files by ls-files
 cd ${SCRIPT_DIR}/..
 
-#   Copy codes to Docker working directory
+# Copy codes to Docker working directory
 for file in $(git ls-files | grep -E "(\\.go|Makefile|scripts|go.mod)"); do
     REL_DIR=$(dirname "$file")
     DIR="${DOCKER_API_SRC_DIR}/${REL_DIR}"
@@ -45,6 +45,6 @@ for file in $(git ls-files | grep -E "(\\.go|Makefile|scripts|go.mod)"); do
     cp -fr "$file" "$DIR"
 done
 
-#   Build
+# Build
 cd "${DOCKER_DIR}/api"
 docker build -t $1 .

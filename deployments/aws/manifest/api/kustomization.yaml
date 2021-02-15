@@ -45,7 +45,7 @@ resources:
 - ingress.yaml
 
 patches:
-# Overwrite a container image name.
+# Overwrite an ECR image name.
 - path: api-patch.yaml
   target:
     kind: Deployment

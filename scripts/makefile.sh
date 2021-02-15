@@ -11,17 +11,17 @@ ARGC=$#
 function usage() {
 cat <<_EOT_
 Usage:
-  $0 Command
+  $0 command
 
 Example.
   $0 build
 
-Command:
+command:
   build         Build app binary.
   fmt           Format sources.
   test          Run test on local.
 _EOT_
-exit 1
+exit 0
 }
 
 build() {

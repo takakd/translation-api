@@ -7,6 +7,7 @@ spec:
     spec:
       containers:
         - name: api-pod
-          # e.g. image: HOSTNAME/PROJECT-ID/IMAGE@IMAGE_DIGEST
+          # Set an GCR image name
+          # e.g. image: HOSTNAME/PROJECT-ID/IMAGE:IMAGE_DIGEST
           image: asia.gcr.io/translator-123/translatorapp-api:latest
 

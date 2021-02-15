@@ -3,10 +3,16 @@ name: Deploy
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, refactor ]
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    # There are no inputs.
+    
 jobs:
   deploy:
+    runs-on: ubuntu-latest
+    
     env:
       GKE_PROJECT_ID: ${{ secrets.GKE_PROJECT_ID }}
       GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
@@ -16,8 +22,6 @@ jobs:
       NAMESPACE: ${{ secrets.NAMESPACE }}
       KUBE_DIR: ./deployments/prod-gke
 
-    runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
 
@@ -26,9 +30,11 @@ jobs:
       with:
         go-version: 1.15
       
-    - run: make fmt
+    - name: Format codes
+      run: make fmt
 
-    - run: make test
+    - name: Run unit tests
+      run: make test
 
     # Setup gcloud CLI
     - uses: google-github-actions/setup-gcloud@v0.2.0
@@ -37,7 +43,7 @@ jobs:
         project_id: ${{ secrets.GKE_PROJECT_ID }}
 
     # Configure docker to use the gcloud command-line tool as a credential helper
-    - run: |-
+    - run: |
         gcloud --quiet auth configure-docker
 
     # Get the GKE credentials so we can deploy to the cluster

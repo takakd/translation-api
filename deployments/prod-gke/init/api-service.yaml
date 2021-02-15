@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
         - name: api-pod
-          # Patch overwrites image.
+          # A patch overwrites image.
           image: asia.gcr.io/PROJECT-ID/translator-api:latest
           imagePullPolicy: IfNotPresent
           ports:
