@@ -83,6 +83,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"header": r.Header,
 			"host":   r.Host,
 			"date":   now.Format(time.RFC3339),
+			"tag":     "health-check",
 		})
 
 		w.Write([]byte("OK"))
