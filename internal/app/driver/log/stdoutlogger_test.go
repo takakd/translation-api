@@ -32,17 +32,26 @@ func TestStdoutLogger_SetLevel(t *testing.T) {
 }
 
 func captureOutputLog(ctx context.Context, l *StdoutLogger, level log2.Level, v log2.Value) string {
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	oldStdout := os.Stdout
+	oldStderr := os.Stderr
+	rStd, wStd, _ := os.Pipe()
+	rErr, wErr, _ := os.Pipe()
+	os.Stdout = wStd
+	os.Stderr = wErr
 
 	l.outputLog(ctx, level, v)
 
-	w.Close()
-	os.Stdout = old
+	wStd.Close()
+	wErr.Close()
+	os.Stdout = oldStdout
+	os.Stdout = oldStderr
 
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	if level == log2.LevelError {
+		io.Copy(&buf, rErr)
+	} else {
+		io.Copy(&buf, rStd)
+	}
 	return buf.String()
 }
 
