@@ -4,6 +4,7 @@ name: Test and Deploy
 on:
   push:
     # Targets are all branches.
+    # Run deployment if a branch is master.
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
