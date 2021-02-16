@@ -10,7 +10,7 @@ on:
     # There are no inputs.
     
 jobs:
-  deploy:
+  test_and_deploy:
     runs-on: ubuntu-latest
     
     env:
