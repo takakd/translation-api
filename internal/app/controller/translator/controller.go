@@ -123,7 +123,7 @@ func (c *Controller) Translate(ctx context.Context, r *translator.TranslateReque
 	log.Info(appCtx, log.Value{
 		"request": r,
 		"date":    now.Format(time.RFC3339),
-		"tag":     "controller.Translate",
+		"tag":     "Translate",
 	})
 
 	// Prepare result
