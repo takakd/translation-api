@@ -10,7 +10,13 @@ import (
 
 	"context"
 
+	"net/http"
+
+	"encoding/json"
+	"net/http/httptest"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewStdoutLogger(t *testing.T) {
@@ -26,17 +32,26 @@ func TestStdoutLogger_SetLevel(t *testing.T) {
 }
 
 func captureOutputLog(ctx context.Context, l *StdoutLogger, level log2.Level, v log2.Value) string {
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	oldStdout := os.Stdout
+	oldStderr := os.Stderr
+	rStd, wStd, _ := os.Pipe()
+	rErr, wErr, _ := os.Pipe()
+	os.Stdout = wStd
+	os.Stderr = wErr
 
 	l.outputLog(ctx, level, v)
 
-	w.Close()
-	os.Stdout = old
+	wStd.Close()
+	wErr.Close()
+	os.Stdout = oldStdout
+	os.Stdout = oldStderr
 
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	if level == log2.LevelError {
+		io.Copy(&buf, rErr)
+	} else {
+		io.Copy(&buf, rStd)
+	}
 	return buf.String()
 }
 
@@ -81,12 +96,26 @@ func TestOutputLog(t *testing.T) {
 		assert.Equal(t, "", got)
 	})
 
-	t.Run("with request id", func(t *testing.T) {
+	t.Run("with request context", func(t *testing.T) {
 		l := NewStdoutLogger()
 		l.SetLevel(log2.LevelDebug)
-		ctx := log2.WithLogContextValue(context.Background(), "req123")
+
+		tReq := httptest.NewRequest(http.MethodGet, "/test", nil)
+		tReq.Header.Add("Key", "value1")
+		tReqID := "req123"
+		tDate := "2021-02-16T20:56:21Z"
+
+		ctx := log2.WithLogContextValue(context.Background(), tReqID, tReq, tDate)
 		got := captureOutputLog(ctx, l, log2.LevelDebug, log2.Value{"msg": "a"})
-		assert.Contains(t, got, `"rid":"req123"`)
+
+		assert.Contains(t, got, fmt.Sprintf(`"rid":"%s"`, tReqID))
+		assert.Contains(t, got, fmt.Sprintf(`"date":"%s"`, tDate))
+		assert.Contains(t, got, fmt.Sprintf(`"path":"%s"`, tReq.URL.Path))
+		assert.Contains(t, got, fmt.Sprintf(`"method":"%s"`, tReq.Method))
+
+		buf, err := json.Marshal(tReq.Header)
+		require.NoError(t, err)
+		assert.Contains(t, got, string(buf))
 	})
 
 	t.Run("levels", func(t *testing.T) {
@@ -105,7 +134,7 @@ func TestOutputLog(t *testing.T) {
 				l.SetLevel(tt.level)
 				got := captureOutputLog(context.TODO(), l, tt.level, log2.Value{"msg": "a"})
 				assert.Contains(t, got, `"msg":"a"`)
-				assert.Contains(t, got, `"rid":""`)
+				assert.NotContains(t, got, `"rid":""`)
 				assert.Contains(t, got, fmt.Sprintf(`"level":"%s"`, tt.label))
 			})
 		}
@@ -125,7 +154,7 @@ func TestDebug(t *testing.T) {
 	l.SetLevel(log2.LevelDebug)
 	got := captureOutputLog(context.TODO(), l, log2.LevelDebug, log2.Value{"msg": "a"})
 	assert.Contains(t, got, `"msg":"a"`)
-	assert.Contains(t, got, `"rid":""`)
+	assert.NotContains(t, got, `"rid":""`)
 	assert.Contains(t, got, fmt.Sprintf(`"level":"%s"`, "DEBUG"))
 }
 
@@ -134,7 +163,7 @@ func TestInfo(t *testing.T) {
 	l.SetLevel(log2.LevelInfo)
 	got := captureOutputLog(context.TODO(), l, log2.LevelInfo, log2.Value{"msg": "a"})
 	assert.Contains(t, got, `"msg":"a"`)
-	assert.Contains(t, got, `"rid":""`)
+	assert.NotContains(t, got, `"rid":""`)
 	assert.Contains(t, got, fmt.Sprintf(`"level":"%s"`, "INFO"))
 }
 
@@ -143,6 +172,6 @@ func TestError(t *testing.T) {
 	l.SetLevel(log2.LevelError)
 	got := captureOutputLog(context.TODO(), l, log2.LevelError, log2.Value{"msg": "a"})
 	assert.Contains(t, got, `"msg":"a"`)
-	assert.Contains(t, got, `"rid":""`)
+	assert.NotContains(t, got, `"rid":""`)
 	assert.Contains(t, got, fmt.Sprintf(`"level":"%s"`, "ERROR"))
 }

@@ -88,8 +88,17 @@ func (l *StdoutLogger) outputLog(ctx context.Context, level log2.Level, v log2.V
 	for vk, vv := range v {
 		data[vk] = vv
 	}
+
 	data["level"] = label
-	data["rid"] = log2.GetRequestID(ctx)
+
+	if ctxValue := log2.GetContextValue(ctx); ctxValue != nil {
+		data["rid"] = ctxValue.RequestID
+		data["header"] = ctxValue.Header
+		data["date"] = ctxValue.Date
+		data["host"] = ctxValue.Host
+		data["method"] = ctxValue.Method
+		data["path"] = ctxValue.Path
+	}
 
 	var msg string
 	if body, err := json.Marshal(data); err == nil {
@@ -103,6 +112,11 @@ func (l *StdoutLogger) outputLog(ctx context.Context, level log2.Level, v log2.V
 		msg = fmt.Sprintf("marshal error: %v", err)
 	}
 
-	logger := log.New(os.Stdout, "", 0)
+	var logger *log.Logger
+	if level == log2.LevelError {
+		logger = log.New(os.Stderr, "", 0)
+	} else {
+		logger = log.New(os.Stdout, "", 0)
+	}
 	logger.Println(msg)
 }

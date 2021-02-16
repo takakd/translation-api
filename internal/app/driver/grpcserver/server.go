@@ -70,7 +70,7 @@ func NewServer() (*Server, error) {
 // ServeHTTP handles requests.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Set request ID.
-	ctx := log.WithLogContextValue(context.Background(), uuid.New().String())
+	ctx := log.WithLogContextValue(context.Background(), uuid.New().String(), r, time.Now().Format(time.RFC3339))
 
 	// Set context to the request.
 	r = r.WithContext(ctx)
@@ -78,12 +78,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Handles health check.
 	if r.URL.Path == s.healthCheckPath && r.Method == http.MethodGet {
 		// Access log
-		now := time.Now()
 		log.Info(ctx, log.Value{
-			"header": r.Header,
-			"host":   r.Host,
-			"date":   now.Format(time.RFC3339),
-			"tag":    "health-check",
+			"tag": "health-check",
 		})
 
 		w.Write([]byte("OK"))

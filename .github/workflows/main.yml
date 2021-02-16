@@ -1,16 +1,16 @@
 # Ref. https://docs.github.com/en/actions/guides/deploying-to-google-kubernetes-engine
-name: Deploy
+name: Test and Deploy
 
 on:
   push:
-    branches: [ master ]
+    # Targets are all branches.
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     # There are no inputs.
     
 jobs:
-  deploy:
+  test_and_deploy:
     runs-on: ubuntu-latest
     
     env:
@@ -36,18 +36,24 @@ jobs:
     - name: Run unit tests
       run: make test
 
+
+    # Run the below actions if the ref is equal to master.
+
     # Setup gcloud CLI
     - uses: google-github-actions/setup-gcloud@v0.2.0
+      if: ${{ github.ref == 'refs/heads/master' }}
       with:
         service_account_key: ${{ secrets.GKE_SA_KEY }}
         project_id: ${{ secrets.GKE_PROJECT_ID }}
 
     # Configure docker to use the gcloud command-line tool as a credential helper
-    - run: |
+    - if: ${{ github.ref == 'refs/heads/master' }}
+      run: |
         gcloud --quiet auth configure-docker
 
     # Get the GKE credentials so we can deploy to the cluster
     - name: Get the GKE credentials
+      if: ${{ github.ref == 'refs/heads/master' }}
       uses: google-github-actions/get-gke-credentials@v0.2.1
       with:
         cluster_name: ${{ env.GKE_CLUSTER }}
@@ -56,21 +62,25 @@ jobs:
 
     # Build the Docker image
     - name: Build the Docker image
+      if: ${{ github.ref == 'refs/heads/master' }}
       run: ./scripts/buildimage.sh asia.gcr.io/$GKE_PROJECT_ID/$IMAGE:$GITHUB_SHA
 
     # Push the Docker image to Google Container Registry
     - name: Push the Docker image
+      if: ${{ github.ref == 'refs/heads/master' }}
       run: |-
         docker push "asia.gcr.io/$GKE_PROJECT_ID/$IMAGE:$GITHUB_SHA"
 
     # Set up kustomize
     - name: Set up Kustomize
+      if: ${{ github.ref == 'refs/heads/master' }}
       run: |-
         curl -sfLo $KUBE_DIR/kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
         chmod u+x $KUBE_DIR/kustomize
 
     # Deploy the Docker image to the GKE cluster
     - name: Apply to GKE
+      if: ${{ github.ref == 'refs/heads/master' }}
       run: |-
         cd $KUBE_DIR
         ./kustomize edit set image asia.gcr.io/GKE_PROJECT_ID/IMAGE=asia.gcr.io/$GKE_PROJECT_ID/$IMAGE:$GITHUB_SHA
