@@ -3,11 +3,11 @@ kind: Ingress
 metadata:
   name: ingress
   annotations:
-    # Add the certificate ARN.
+    # Add a certificate ARN.
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-1:123456:certificate/...
 spec:
   rules:
-    # Add the domain.
+    # Add a domain.
     - host: api.example.com
       http:
         paths:

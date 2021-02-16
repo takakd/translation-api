@@ -8,6 +8,7 @@ fargateProfiles:
     selectors:
       - namespace: default
       - namespace: kube-system
+  # A profile for api pods.
   - name: fp-translatorapp
     selectors:
       - namespace: translatorapp

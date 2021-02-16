@@ -85,7 +85,7 @@ GOOGLE_PROJECT_ID=...           #<-- Add GCP ProjectID where the GCP service acc
 
 ### 3. Deploy to GKE
 
-Create an GKE cluster.
+Create a GKE cluster.
 
 ```sh
 $ gcloud container clusters create translatorapp-cluster \
@@ -144,7 +144,7 @@ spec:
     spec:
       containers:
         - name: api-pod
-          # Add the GCR image name.
+          # Add a GCR image name.
           image: asia.gcr.io/translator-123/translatorapp-api:latest
 ```
 
@@ -157,7 +157,7 @@ metadata:
   name: envoy-cert
 spec:
   domains:
-    # Add the domain.
+    # Add a domain.
     - api.example.com
 ```
 
@@ -169,11 +169,11 @@ kind: Ingress
 metadata:
   name: ingress
   annotations:
-    # Add the static ip name.
+    # Add a static IP name.
     kubernetes.io/ingress.global-static-ip-name: api-example-com
 spec:
   rules:
-  # Add the domain.
+  # Add a domain.
   - host: api.example.com
     http:
       paths:
@@ -200,7 +200,7 @@ $ gcloud compute addresses list
 
 Ref. [Step 4: Update the DNS A and AAAA records to point to the load balancer's IP address](https://cloud.google.com/load-balancing/docs/ssl-certificates/google-managed-certs?hl=ja#update-dns)
 
-After a while, the certificate will be approved and you will be able to access it with the domain you specified.
+After a while, the certificate will be approved, and you will be able to access it with the domain you specified.
 
 ### 6. Clean up
 
@@ -214,7 +214,7 @@ $ kustomize build . | kubectl delete -f -
 Delete GKE cluster.
 
 ```
-% gcloud container clusters delete translatorapp-cluster
+$ gcloud container clusters delete translatorapp-cluster
 The following clusters will be deleted.
  - [translatorapp-cluster] in [asia-northeast1-c]
 
@@ -223,7 +223,7 @@ Do you want to continue (Y/n)?  y
 Deleting cluster translatorapp-cluster...⠶    
 ```
 
-**Sometimes some resources are still active, so check GCP console page to see whether all resources are deleted.**
+**Sometimes, some resources are still active, so check GCP console page to see whether all resources are deleted.**
 
 ## Ref.
 - GCP
@@ -244,4 +244,6 @@ Deleting cluster translatorapp-cluster...⠶
     - [Envoy Proxy Configuration](https://docs.build.security/docs/envoy)
     - [Envoy で HTTPS 接続をする設定を学べる「Securing traffic with HTTPS and SSL/TLS」を試した](https://kakakakakku.hatenablog.com/entry/2019/12/06/143207)
     
-    
+## License
+
+&copy; 2021 takakd

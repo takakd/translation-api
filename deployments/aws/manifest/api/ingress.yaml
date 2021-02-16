@@ -11,10 +11,10 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     # Serves API with HTTPS.
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
-    # Envoy backend listen HTTP because ALB terminates TLS.
+    # Envoy backend listens HTTP because ALB terminates TLS.
     alb.ingress.kubernetes.io/backend-protocol: 'HTTP'
     alb.ingress.kubernetes.io/healthcheck-port: '9000'
     alb.ingress.kubernetes.io/healthcheck-path: '/health'
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/healthcheck-protocol: 'HTTP'
-# spec is overwritten by a patch.
+# A patch add spec properties.

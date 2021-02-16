@@ -5,7 +5,7 @@ This document describes how to deploy to EKS.
 ## Requirement
 
 * Kubernetes and AWS knowledge
-* AWS account, which can use EKS, ECR and Amazon Translate.
+* AWS account, which can use EKS, ECR, and Amazon Translate.
 * GCP account, which can use Translation API.
 * AWS CLI: 2.1.22
 * Docker: 20.10.2
@@ -41,7 +41,7 @@ $ aws ecr create-repository --repository-name translatorapp-api --region ap-nort
         ...
 ```
 
-Logged in ECR.
+Login to ECR.
 
 ```sh
 $ aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 123456.dkr.ecr.ap-northeast-1.amazonaws.com
@@ -250,7 +250,7 @@ Delete EKS cluster.
 $ eksctl delete cluster -f cluster.yaml
 ```
 
-**Sometimes some resources are still active, so check AWS console page to see whether all resources are deleted.**
+**Sometimes, some resources are still active, so check AWS console page to see whether all resources are deleted.**
 
 ## Ref. 
 - AWS
@@ -266,3 +266,7 @@ $ eksctl delete cluster -f cluster.yaml
     - [HTTP/2 Adventure in the Go World](https://posener.github.io/http2/)
     - [Introduction to HTTP/2](https://developers.google.com/web/fundamentals/performance/http2)
     - [Envoy Proxy Configuration](https://docs.build.security/docs/envoy)    
+
+## License
+
+&copy; 2021 takakd

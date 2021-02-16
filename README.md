@@ -33,7 +33,7 @@ For a GCP account, see [Creating and managing service accounts](https://cloud.go
 
 ### Prepare a TLS certificate
 
-Create a server key file and TLS certificate if an API used TLS.
+Create a server key file and TLS certificate if an API uses TLS.
 
 e.g., Self-signed certificate
 
@@ -217,7 +217,4 @@ Issues and reviews are welcome. Don't hesitate to create issues and PR.
 
 ## License
 
-- Copyright 2020 © takakd.
-
-
-
+&copy; 2021 takakd
