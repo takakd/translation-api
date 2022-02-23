@@ -12,7 +12,7 @@
 ## Table of Contents
 
 - [Features](#features)
-- [Usage](#usage)
+- [Usage](#setup)
 - [Development](#development)
 - [License](#license)
 
